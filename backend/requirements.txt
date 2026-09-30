@@ -1,0 +1,20 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+sqlalchemy[asyncio]>=2.0
+asyncpg>=0.29
+alembic>=1.13
+pydantic>=2.7
+pydantic-settings>=2.3
+python-multipart>=0.0.9
+email-validator>=2.1
+
+# Authentication
+# bcrypt is pinned: passlib 1.7.4 reads `bcrypt.__about__`, which bcrypt
+# removed in 4.1, so a newer bcrypt breaks every password hash call.
+passlib[bcrypt]>=1.7.4
+bcrypt==4.0.1
+python-jose[cryptography]>=3.3
+
+# Infrastructure
+redis>=5.0
+python-dotenv>=1.0

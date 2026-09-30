@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Base look for the operational console: near-black, high contrast, no
+ * scrollbars on the map chrome. Deliberately minimal in Part 1 — the theme
+ * tokens live in tailwind.config.js.
+ */
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-aurora-bg text-aurora-text antialiased;
+    margin: 0;
+    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* OpenLayers renders its controls into the map; keep them unobtrusive. */
+  .ol-zoom {
+    @apply rounded border border-aurora-border;
+  }
+
+  .ol-control button {
+    @apply bg-aurora-panel text-aurora-text;
+  }
+}
