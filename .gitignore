@@ -88,8 +88,13 @@ forecaster/.pytest_cache/
 forecaster/*.egg-info/
 
 # ─── Backend data (runtime artifacts, not source) ────────────────
-backend/data/
-!backend/data/.gitkeep
+# A bare `backend/data/` directory rule would make it impossible to
+# re-include anything underneath it (git never descends into an excluded
+# directory). Leave the directory open, ignore its contents, then re-include
+# the placeholders — every .npy and .png written at runtime stays ignored.
+backend/data/**
+!backend/data/**/
+!backend/data/**/.gitkeep
 backend/*.log
 backend/uvicorn.log
 

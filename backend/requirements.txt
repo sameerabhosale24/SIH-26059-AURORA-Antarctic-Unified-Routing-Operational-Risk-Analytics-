@@ -2,6 +2,9 @@ fastapi>=0.115
 uvicorn[standard]>=0.30
 sqlalchemy[asyncio]>=2.0
 asyncpg>=0.29
+# Sync driver for the scheduler jobs — APScheduler threads must not share the
+# async engine's event loop, so the job path uses psycopg2 on the same URL.
+psycopg2-binary>=2.9
 alembic>=1.13
 pydantic>=2.7
 pydantic-settings>=2.3
@@ -18,3 +21,45 @@ python-jose[cryptography]>=3.3
 # Infrastructure
 redis>=5.0
 python-dotenv>=1.0
+httpx>=0.27
+
+# ---------------------------------------------------------------------------
+# Data infrastructure
+# ---------------------------------------------------------------------------
+
+# Geospatial type support for the geometry columns (iceberg points, route
+# linestrings, alarm and drift-cone polygons).
+geoalchemy2>=0.15
+
+# Regridding: nearest-neighbour resampling from polar stereographic and
+# EASE-Grid sources onto the ROI grid.
+pyresample>=1.28
+
+# Field handling, NetCDF I/O and the interactive parts of the toolkit.
+numpy>=1.26
+xarray>=2024.1
+netCDF4>=1.6
+scipy>=1.11
+
+# SIC frame rendering: LCC reprojection and PNG output.
+rasterio>=1.3
+pyproj>=3.6
+matplotlib>=3.8
+
+# Daily / weekly / hourly job scheduling.
+apscheduler>=3.10
+
+# ---------------------------------------------------------------------------
+# Test suite
+# ---------------------------------------------------------------------------
+pytest>=8.0
+
+# ---------------------------------------------------------------------------
+# Optional data-source clients.
+#
+# Only needed once you set the matching credentials in backend/.env — each
+# adapter raises a clear "run pip install <package>" error instead of
+# silently doing nothing. Uncomment the ones you actually have access to.
+# ---------------------------------------------------------------------------
+# cdsapi>=0.7            # ERA5 / ERA5T          (CDSAPI_URL, CDSAPI_KEY)
+# copernicusmarine>=1.0  # CMEMS, CS2SMOS        (CMEMS_USERNAME, CMEMS_PASSWORD)
