@@ -1,17 +1,100 @@
+# ─── Node / frontend ─────────────────────────────────────────────
 node_modules/
-dist/
+aurora-frontend/node_modules/
+aurora-frontend/dist/
+aurora-frontend/.vite/
+aurora-frontend/.env
+aurora-frontend/.env.local
+aurora-frontend/.env.*.local
+aurora-frontend/*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ─── Python / backend ────────────────────────────────────────────
 .venv/
+venv/
+env/
+ENV/
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ─── Python testing / coverage ───────────────────────────────────
 .pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+*.cover
+*.py,cover
+
+# ─── Type checking / linting ─────────────────────────────────────
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+.pytype/
+
+# ─── Django / Flask (in case backend grows) ──────────────────────
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# ─── Environment / secrets ───────────────────────────────────────
 .env
 .env.local
-*.log
-data/
-backend/data/
+.env.*.local
+*.env
+!.env.example
 
-# Forecaster package
+# ─── IDE / editor ────────────────────────────────────────────────
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ─── Forecaster package ──────────────────────────────────────────
 forecaster/__pycache__/
 forecaster/**/__pycache__/
 forecaster/.pytest_cache/
 forecaster/*.egg-info/
+
+# ─── Backend data (runtime artifacts, not source) ────────────────
+backend/data/
+!backend/data/.gitkeep
+backend/*.log
+backend/uvicorn.log
+
+# ─── Docker ──────────────────────────────────────────────────────
+*.pid
+
+# ─── Keep placeholders in empty runtime dirs ─────────────────────
+!**/.gitkeep
