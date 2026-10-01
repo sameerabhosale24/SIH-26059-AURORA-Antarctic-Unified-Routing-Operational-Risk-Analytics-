@@ -19,6 +19,7 @@ import { AnalysisView } from '@/views/AnalysisView';
 import { LoginPage } from '@/views/LoginPage';
 import { OperationalView } from '@/views/OperationalView';
 import { PlanningView } from '@/views/PlanningView';
+import { RegisterPage } from '@/views/RegisterPage';
 import { SettingsView } from '@/views/SettingsView';
 import { ShipDetailPage } from '@/views/ShipDetailPage';
 import { ShipsOverviewPage } from '@/views/ShipsOverviewPage';
@@ -31,6 +32,7 @@ export function AppRoutes(): JSX.Element {
 
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
         {/* Root resolves to the fleet; RequireAuth then decides login vs fleet. */}
         <Route path="/" element={<Navigate to="/ships" replace />} />

@@ -53,6 +53,7 @@ export const API_PATHS = {
 
   /* auth + fleet */
   authLogin: '/api/auth/login',
+  authRegister: '/api/auth/register',
   authMe: '/api/auth/me',
   authLogout: '/api/auth/logout',
   vessels: '/api/vessels',
@@ -377,6 +378,21 @@ export function acceptRoute(
  */
 export async function login(email: string, password: string): Promise<LoginResponse> {
   const body = await postRequired<LoginResponse>(API_PATHS.authLogin, { email, password });
+
+  setToken(body.token);
+  setStoredUser(body.user);
+
+  return body;
+}
+
+/**
+ * `POST /api/auth/register` — create an account, returning a token on 201.
+ *
+ * A 409 (address already taken) surfaces as an {@link ApiError} so the caller
+ * can quote it verbatim rather than inventing a second explanation.
+ */
+export async function register(email: string, password: string): Promise<LoginResponse> {
+  const body = await postRequired<LoginResponse>(API_PATHS.authRegister, { email, password });
 
   setToken(body.token);
   setStoredUser(body.user);

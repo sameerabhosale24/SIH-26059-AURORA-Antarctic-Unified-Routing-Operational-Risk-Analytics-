@@ -8,14 +8,15 @@
  */
 import { create } from 'zustand';
 
-import { getMe, login as apiLogin, logout as apiLogout } from '@/services/api';
+import { ApiError, getMe, login as apiLogin, logout as apiLogout, register as apiRegister } from '@/services/api';
 import {
   clearAuthStorage,
   getStoredUser,
   getToken,
   setStoredUser,
+  setToken,
 } from '@/services/session';
-import type { User } from '@/types/auth';
+import type { LoginResponse, User } from '@/types/auth';
 
 export type AuthStatus = 'idle' | 'pending' | 'error';
 
@@ -27,6 +28,11 @@ export interface UserStore {
   error: string | null;
 
   signIn(email: string, password: string): Promise<boolean>;
+  /**
+   * Create an account and sign straight in. Resolves `false` (with `error`
+   * set) rather than throwing, so a duplicate address can be shown inline.
+   */
+  register(email: string, password: string): Promise<boolean>;
   signOut(): Promise<void>;
   /** Re-validate the stored token against `/api/auth/me`. */
   refresh(): Promise<void>;
@@ -51,7 +57,7 @@ export const useUserStore = create<UserStore>()((set, get) => ({
     set({ status: 'pending', error: null });
 
     try {
-      const { token, user } = await apiLogin(email, password);
+      const { token, user } = await authenticate(email, password);
       set({ user, token, status: 'idle', error: null });
       return true;
     } catch (cause) {
@@ -61,6 +67,19 @@ export const useUserStore = create<UserStore>()((set, get) => ({
         // A failed sign-in never signs anyone in: leave whatever session
         // existed untouched.
       });
+      return false;
+    }
+  },
+
+  register: async (email, password) => {
+    set({ status: 'pending', error: null });
+
+    try {
+      const { token, user } = await createAccount(email, password);
+      set({ user, token, status: 'idle', error: null });
+      return true;
+    } catch (cause) {
+      set({ status: 'error', error: registerErrorMessage(cause) });
       return false;
     }
   },
@@ -112,4 +131,59 @@ function signInErrorMessage(cause: unknown): string {
   if (cause instanceof TypeError) return 'Cannot reach the AURORA backend. Is it running?';
   if (cause instanceof Error) return cause.message;
   return 'Sign-in failed.';
+}
+
+/**
+ * Sign-in, routed to the dev shim when `VITE_AUTH_DEV=true`.
+ *
+ * The shim persists through the same session helpers as the real client, so a
+ * reload restores a dev session exactly as it would a real one.
+ */
+async function authenticate(email: string, password: string): Promise<LoginResponse> {
+  if (import.meta.env.VITE_AUTH_DEV !== 'true') return apiLogin(email, password);
+
+  const { devLogin } = await import('@/services/authDev');
+  const credentials = await devLogin(email, password);
+  setToken(credentials.token);
+  setStoredUser(credentials.user);
+  return credentials;
+}
+
+/** Registration, with the same dev-mode routing as {@link authenticate}. */
+async function createAccount(email: string, password: string): Promise<LoginResponse> {
+  if (import.meta.env.VITE_AUTH_DEV !== 'true') return apiRegister(email, password);
+
+  const { devRegister } = await import('@/services/authDev');
+  const credentials = await devRegister(email, password);
+  setToken(credentials.token);
+  setStoredUser(credentials.user);
+  return credentials;
+}
+
+/** `detail` out of a FastAPI error body, when the backend sent one. */
+function backendDetail(cause: ApiError): string | null {
+  try {
+    const parsed = JSON.parse(cause.body) as { detail?: unknown };
+    if (typeof parsed.detail === 'string' && parsed.detail.trim() !== '') return parsed.detail;
+  } catch {
+    /* body was not JSON — fall through to the generic text */
+  }
+  return null;
+}
+
+/** Registration failure text. A duplicate address gets its own wording. */
+function registerErrorMessage(cause: unknown): string {
+  if (cause instanceof ApiError) {
+    if (cause.status === 409) return 'An account with this email already exists';
+
+    const detail = backendDetail(cause);
+    if (detail) return detail;
+
+    if (cause.status === 404) return 'Registration is not available on this backend.';
+    if (cause.status === 500 || cause.status === 503) return 'Registration service is unavailable.';
+  }
+
+  if (cause instanceof TypeError) return 'Cannot reach the AURORA backend. Is it running?';
+  if (cause instanceof Error) return cause.message;
+  return 'Registration failed.';
 }
