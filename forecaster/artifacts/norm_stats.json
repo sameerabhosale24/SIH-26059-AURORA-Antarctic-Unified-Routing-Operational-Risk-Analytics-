@@ -1,0 +1,42 @@
+{
+  "sic_mean": 0.24278075993061066,
+  "sic_std": 0.3915190100669861,
+  "channel_names": [
+    "u10",
+    "v10",
+    "t2m",
+    "uo",
+    "vo",
+    "thetao",
+    "so",
+    "zos",
+    "sic_prev_year"
+  ],
+  "mean": [
+    1.8197200298309326,
+    0.5730945467948914,
+    264.1417541503906,
+    0.0484735332429409,
+    0.014336127787828445,
+    273.44110107421875,
+    33.848628997802734,
+    -1.5353742837905884,
+    0.24278075993061066
+  ],
+  "std": [
+    7.494307994842529,
+    5.272633075714111,
+    13.986188888549805,
+    0.11475426703691483,
+    0.10006820410490036,
+    1.8788002729415894,
+    0.33738866448402405,
+    0.2644801437854767,
+    0.3915190100669861
+  ],
+  "training_period": "2021-01-01 to 2024-12-31",
+  "n_days": 1461,
+  "n_full_days": 1826,
+  "sic_prev_year_nan_days": 365,
+  "note": "RAW SIC stored in sic.npy (NaN preserved); input SIC channel standardized on the fly in dataset.py with sic_mean.npy/sic_std.npy (train-period stats). Channel 9 (sic_prev_year) standardized with the same SIC scalars. Model head is sigmoid; target y and ALL metrics use RAW 0..1. Forcing channels standardized here (NaN -> 0 post-std). CMEMS enabled."
+}
