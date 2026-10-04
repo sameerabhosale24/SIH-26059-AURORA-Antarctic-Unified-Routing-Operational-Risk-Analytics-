@@ -1,8 +1,9 @@
 /**
  * Own-ship layer.
  *
- * Sits above every other overlay: the vessel is the frame of reference for the
- * whole display and must never be covered by a route or a target.
+ * Sits above every operational overlay — a route or a target must never
+ * cover the vessel. Only the graticule (a drawing aid, not chart content)
+ * is painted higher.
  */
 import VectorLayer from 'ol/layer/Vector';
 
@@ -29,8 +30,8 @@ function build(state: VesselStore): OwnShipLayer | null {
 
   return new VectorLayer<GeoFeature>({
     source: createOwnShipSource(features),
-    style: getOwnShipStyle(getPalette('day')),
-    zIndex: 95,
+    style: getOwnShipStyle(getPalette()),
+    zIndex: 70,
   });
 }
 

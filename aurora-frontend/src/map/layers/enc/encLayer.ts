@@ -64,10 +64,10 @@ function buildLayer(state: EncStore): EncVectorLayer {
 
   const layer = new VectorLayer<GeoFeature>({
     source: createGeoSource(),
-    style: getEncStyle(getPalette('day')),
-    // Bottom of the stack: everything else is drawn over the chart, never the
-    // other way round.
-    zIndex: 10,
+    style: getEncStyle(getPalette()),
+    // Bottom of the reference stack: everything else is drawn over the chart,
+    // never the other way round.
+    zIndex: 20,
   });
 
   // Recorded up front so the subscription's immediate `update` for this same

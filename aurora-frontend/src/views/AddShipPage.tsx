@@ -190,7 +190,7 @@ function Field({ field, register, error }: FieldProps): JSX.Element {
   const label = `${field.label}${field.required ? ' *' : ''}`;
 
   const baseClass =
-    'w-full rounded-sm border border-aurora-border bg-aurora-bg px-2.5 py-1.5 text-xs text-aurora-text outline-none transition-colors focus:border-aurora-accent';
+    'w-full rounded-sm border border-ocean-800 bg-ocean-950 px-2.5 py-1.5 text-xs text-ocean-100 outline-none transition-colors focus:border-ocean-400';
 
   const describedBy = error ? `${id}-error` : undefined;
 
@@ -199,16 +199,16 @@ function Field({ field, register, error }: FieldProps): JSX.Element {
       <label
         htmlFor={id}
         title={field.tooltip}
-        className="flex h-full cursor-pointer items-center gap-2 rounded-sm border border-aurora-border bg-aurora-bg px-2.5 py-2 transition-colors hover:border-aurora-accent/50"
+        className="flex h-full cursor-pointer items-center gap-2 rounded-sm border border-ocean-800 bg-ocean-950 px-2.5 py-2 transition-colors hover:border-ocean-400/50"
       >
         <input
           id={id}
           type="checkbox"
-          className="h-3.5 w-3.5 accent-aurora-accent"
+          className="h-3.5 w-3.5 accent-ocean-400"
           aria-describedby={describedBy}
           {...register(field.key)}
         />
-        <span className="text-xs text-aurora-text">{field.label}</span>
+        <span className="text-xs text-ocean-100">{field.label}</span>
       </label>
     );
   }
@@ -218,7 +218,7 @@ function Field({ field, register, error }: FieldProps): JSX.Element {
       <label
         htmlFor={id}
         title={field.tooltip}
-        className="mb-1 block cursor-help text-[10px] uppercase tracking-[0.12em] text-aurora-muted"
+        className="mb-1 block cursor-help text-[10px] uppercase tracking-[0.12em] text-ocean-300"
       >
         {label}
       </label>
@@ -332,13 +332,13 @@ function ShipFormFields({
           {SHIP_SECTIONS.map((section) => (
             <section
               key={section.id}
-              className="rounded border border-aurora-border bg-aurora-panel"
+              className="rounded border border-ocean-800 bg-ocean-900"
             >
-              <header className="border-b border-aurora-border px-3 py-2">
-                <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-aurora-text">
+              <header className="border-b border-ocean-800 px-3 py-2">
+                <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ocean-100">
                   {section.title}
                 </h2>
-                <p className="mt-0.5 text-[11px] leading-snug text-aurora-muted">{section.hint}</p>
+                <p className="mt-0.5 text-[11px] leading-snug text-ocean-300">{section.hint}</p>
               </header>
 
               <div className="grid gap-3 p-3 sm:grid-cols-2">
@@ -351,9 +351,9 @@ function ShipFormFields({
         </div>
       </div>
 
-      <footer className="sticky bottom-0 z-10 flex shrink-0 items-center gap-3 border-t border-aurora-border bg-aurora-panel px-3 py-2.5">
-        <p className="text-[11px] text-aurora-muted">
-          Fields marked <span className="text-aurora-text">*</span> are required. Every other
+      <footer className="sticky bottom-0 z-10 flex shrink-0 items-center gap-3 border-t border-ocean-800 bg-ocean-900 px-3 py-2.5">
+        <p className="text-[11px] text-ocean-300">
+          Fields marked <span className="text-ocean-100">*</span> are required. Every other
           value may stay blank.
         </p>
 
@@ -368,7 +368,7 @@ function ShipFormFields({
             type="button"
             onClick={() => navigate(editId === null ? '/ships' : `/ships/${editId}`)}
             disabled={busy}
-            className="rounded-sm border border-aurora-border px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-aurora-muted transition-colors hover:text-aurora-text disabled:opacity-50"
+            className="rounded-sm border border-ocean-600 px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-ocean-300 transition-colors hover:bg-ocean-800 hover:text-ocean-100 disabled:opacity-50"
           >
             Cancel
           </button>
@@ -376,7 +376,7 @@ function ShipFormFields({
           <button
             type="submit"
             disabled={busy}
-            className="rounded-sm bg-aurora-accent px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-aurora-bg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-sm bg-ocean-600 hover:bg-ocean-500 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
           >
             {busy ? 'Saving…' : editId === null ? 'Create vessel' : 'Save changes'}
           </button>
@@ -388,17 +388,17 @@ function ShipFormFields({
 
 function PageHeader({ title, subtitle, backTo }: { title: string; subtitle: string; backTo: string }): JSX.Element {
   return (
-    <header className="flex items-center gap-3 border-b border-aurora-border bg-aurora-panel px-3 py-2">
+    <header className="flex items-center gap-3 border-b border-ocean-800 bg-ocean-900 px-3 py-2">
       <Link
         to={backTo}
-        className="rounded-sm border border-aurora-border px-2 py-1 text-[11px] uppercase tracking-[0.12em] text-aurora-muted transition-colors hover:text-aurora-text"
+        className="rounded-sm border border-ocean-600 px-2 py-1 text-[11px] uppercase tracking-[0.12em] text-ocean-300 transition-colors hover:bg-ocean-800 hover:text-ocean-100"
       >
         ← Fleet
       </Link>
 
       <div className="min-w-0">
-        <h1 className="truncate text-sm font-semibold tracking-[0.12em] text-aurora-text">{title}</h1>
-        <p className="truncate text-[11px] text-aurora-muted">{subtitle}</p>
+        <h1 className="truncate text-sm font-semibold tracking-[0.12em] text-ocean-100">{title}</h1>
+        <p className="truncate text-[11px] text-ocean-300">{subtitle}</p>
       </div>
     </header>
   );
@@ -407,11 +407,11 @@ function PageHeader({ title, subtitle, backTo }: { title: string; subtitle: stri
 function Blocked({ title, message, backTo }: { title: string; message: string; backTo: string }): JSX.Element {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-      <p className="text-sm text-aurora-text">{title}</p>
-      <p className="max-w-md text-[11px] leading-relaxed text-aurora-muted">{message}</p>
+      <p className="text-sm text-ocean-100">{title}</p>
+      <p className="max-w-md text-[11px] leading-relaxed text-ocean-300">{message}</p>
       <Link
         to={backTo}
-        className="rounded-sm bg-aurora-accent px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-aurora-bg"
+        className="rounded-sm bg-ocean-600 hover:bg-ocean-500 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white"
       >
         Back to fleet
       </Link>
@@ -433,7 +433,7 @@ export function AddShipPage(): JSX.Element {
       return (
         <div className="flex h-full flex-col">
           <PageHeader title="Edit vessel" subtitle="Loading…" backTo="/ships" />
-          <div className="flex flex-1 items-center justify-center text-xs text-aurora-muted">
+          <div className="flex flex-1 items-center justify-center text-xs text-ocean-300">
             Loading vessel…
           </div>
         </div>

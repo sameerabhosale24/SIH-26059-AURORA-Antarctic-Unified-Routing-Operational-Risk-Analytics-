@@ -18,7 +18,7 @@ const API_TONE: Record<string, string> = {
 const WS_TONE: Record<string, string> = {
   open: 'text-aurora-ok',
   connecting: 'text-aurora-warn',
-  closed: 'text-aurora-muted',
+  closed: 'text-ocean-300',
   error: 'text-aurora-crit',
 };
 
@@ -30,13 +30,13 @@ export function ConnectionStatusOverlay(): JSX.Element {
 
   return (
     <div
-      className="pointer-events-none fixed bottom-3 left-3 z-50 select-none rounded border border-aurora-border bg-aurora-panel/90 px-2 py-1 font-mono text-[11px] leading-tight"
+      className="pointer-events-none fixed bottom-3 left-3 z-50 select-none rounded border border-ocean-800 bg-ocean-900/90 px-2 py-1 font-mono text-[11px] leading-tight"
       role="status"
       aria-live="polite"
     >
-      <span className={API_TONE[apiStatus] ?? 'text-aurora-muted'}>API: {apiStatus}</span>
-      <span className="px-2 text-aurora-border">|</span>
-      <span className={WS_TONE[ws] ?? 'text-aurora-muted'}>WS: {ws}</span>
+      <span className={API_TONE[apiStatus] ?? 'text-ocean-300'}>API: {apiStatus}</span>
+      <span className="px-2 text-ocean-800">|</span>
+      <span className={WS_TONE[ws] ?? 'text-ocean-300'}>WS: {ws}</span>
     </div>
   );
 }

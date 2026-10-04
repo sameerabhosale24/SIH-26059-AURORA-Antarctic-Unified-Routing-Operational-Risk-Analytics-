@@ -7,7 +7,7 @@
  *     instruction for an object class, including S-52's conditional symbology
  *     for DEPARE depth areas and LIGHTS.
  *   - `resolveColor(token, mode)` resolves the standard colour tokens for
- *     Day/Dusk/Night.
+ *     whichever S-52 presentation is selected — AURORA selects exactly one.
  *
  * This module is a mechanical adapter from those instructions to
  * `ol.style.Style`. It contains no chart knowledge of its own.
@@ -19,7 +19,7 @@
  *   - depth-area and depth-contour colouring, including depth-band selection
  *     for DEPARE (DRVAL1/DRVAL2);
  *   - line vs area vs point vs text symbol class for each object class;
- *   - the S-52 Day/Dusk/Night colour tokens;
+ *   - the S-52 colour tokens for that presentation;
  *   - the fallback instruction for unrecognised object classes.
  *
  * What is APPROXIMATED here, and why it is acceptable for this operating area:
@@ -50,11 +50,19 @@ import Style from 'ol/style/Style';
 import Text from 'ol/style/Text';
 
 import { lookupInstruction, resolveColor, rgbToCSS } from '@s57-parser/s52-render';
-import type { RenderInstruction, DisplayMode as S52DisplayMode } from '@s57-parser/s52-render';
+import type { RenderInstruction } from '@s57-parser/s52-render';
 
 import { REFERENCE_WIDTH, ZOOM_THRESHOLDS } from '@/config/constants';
-import { toS52Mode, type Palette } from '@/config/palettes';
+import { S52_PRESENTATION, type Palette } from '@/config/palettes';
 import { ENC_PROPS } from './encSource';
+
+/**
+ * The presentation argument the S-52 library's colour resolver takes.
+ *
+ * Derived from the library rather than re-declared, so AURORA carries no
+ * vocabulary for presentations it does not use.
+ */
+type S52Presentation = Parameters<typeof resolveColor>[1];
 
 /** S-57 attribute codes this portrayal reads directly. */
 const ATTL = {
@@ -133,7 +141,7 @@ function isVisibleAtResolution(
  * saying "hidden at this resolution".
  */
 export function getEncStyle(palette: Palette): StyleFunction {
-  const s52Mode = toS52Mode(palette.mode);
+  const s52Mode: S52Presentation = S52_PRESENTATION;
 
   return function encStyleFunction(feature: FeatureLike, resolution: number): Style | Style[] | undefined {
     const objl = readNumberAttribute(feature, ENC_PROPS.OBJL, -1);
@@ -180,7 +188,7 @@ function maxResolutionFor(objl: number): number {
   return Number.POSITIVE_INFINITY;
 }
 
-function resolveFill(instruction: RenderInstruction, s52Mode: S52DisplayMode): Fill | null {
+function resolveFill(instruction: RenderInstruction, s52Mode: S52Presentation): Fill | null {
   // S-52 pattern fills are approximated by a translucent fill (see header).
   if (instruction.fillAlpha !== undefined && instruction.fillAlpha <= 0) return null;
   if (!instruction.fill && !instruction.pattern) return null;
@@ -193,7 +201,7 @@ function resolveFill(instruction: RenderInstruction, s52Mode: S52DisplayMode): F
   });
 }
 
-function strokePart(instruction: RenderInstruction, s52Mode: S52DisplayMode): Stroke | null {
+function strokePart(instruction: RenderInstruction, s52Mode: S52Presentation): Stroke | null {
   const token = instruction.stroke;
   if (!token) return null;
 
@@ -215,7 +223,7 @@ function strokePart(instruction: RenderInstruction, s52Mode: S52DisplayMode): St
  * (OpenLayers' triangle rotation is 45° from square). Sector arcs and light
  * characteristics are intentionally not drawn — see the header notice.
  */
-function pointPart(instruction: RenderInstruction, s52Mode: S52DisplayMode): CircleStyle | RegularShape | null {
+function pointPart(instruction: RenderInstruction, s52Mode: S52Presentation): CircleStyle | RegularShape | null {
   if (instruction.type !== 'point') return null;
 
   const radius = instruction.radius ?? 3;

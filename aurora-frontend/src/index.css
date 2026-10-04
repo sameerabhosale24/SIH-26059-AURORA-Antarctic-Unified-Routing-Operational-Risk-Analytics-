@@ -20,7 +20,7 @@
   }
 
   body {
-    @apply bg-aurora-bg text-aurora-text antialiased;
+    @apply bg-ocean-950 text-ocean-100 antialiased;
     margin: 0;
     font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
     font-variant-numeric: tabular-nums;
@@ -30,10 +30,10 @@
 @layer components {
   /* OpenLayers renders its controls into the map; keep them unobtrusive. */
   .ol-zoom {
-    @apply rounded border border-aurora-border;
+    @apply rounded border border-ocean-800;
   }
 
   .ol-control button {
-    @apply bg-aurora-panel text-aurora-text;
+    @apply bg-ocean-900 text-ocean-100;
   }
 }

@@ -7,12 +7,15 @@
  * together would make the band look like a confidence region on the ice
  * field rather than a separate product.
  */
-import type { DisplayMode } from '@/config/palettes';
-import { SIC_FILTER_PROP, attachImageFilter, uncertaintyFilterFor } from '../sic/sicStyle';
+import {
+  SIC_FILTER_PROP,
+  attachImageFilter,
+  uncertaintyFilterFor,
+} from '../sic/sicStyle';
 
 export { SIC_FILTER_PROP, attachImageFilter, uncertaintyFilterFor };
 
-/** The filter string for the current display mode. */
-export function uncertaintyStyle(mode: DisplayMode): string {
-  return uncertaintyFilterFor(mode);
+/** The canvas filter applied around the uncertainty raster. */
+export function uncertaintyStyle(): string {
+  return uncertaintyFilterFor();
 }

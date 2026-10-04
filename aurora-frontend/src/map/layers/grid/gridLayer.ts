@@ -1,8 +1,9 @@
 /**
  * Graticule layer.
  *
- * Static reference geometry: it has no backing store, never goes stale and is
- * off by default so it cannot be mistaken for charted data.
+ * Static reference geometry: it has no backing store and never goes stale. It
+ * is on by default because it is part of the chart — a lat/lon reading aid
+ * that has to be switched on before it can be read is not a reading aid.
  */
 import VectorLayer from 'ol/layer/Vector';
 
@@ -24,10 +25,11 @@ function build(): GridLayer | null {
 
   return new VectorLayer<GeoFeature>({
     source,
-    style: getGridStyle(getPalette('day')),
-    // Above the SIC raster and the ENC, but below every operational overlay —
-    // a reading aid must never sit on top of a route or a target.
-    zIndex: 30,
+    style: getGridStyle(getPalette()),
+    // Top of the stack, deliberately. The graticule is a navigation
+    // reference — like a compass rose on a paper chart it must stay visible
+    // whatever is painted underneath it, the SIC raster included.
+    zIndex: 90,
     declutter: false,
   });
 }
@@ -36,7 +38,7 @@ export const grid: AuroraLayer = {
   id: 'grid',
   title: 'Graticule',
   category: 'reference',
-  defaultVisible: false,
+  defaultVisible: true,
   defaultOpacity: 1,
   stalenessKey: null,
 

@@ -1,9 +1,10 @@
-"""AISStream.io WebSocket relay — stubbed for PART 2.
+"""AISStream.io WebSocket relay — not a per-day fetch.
 
-The schema (``ais_track``) already exists and the adapter contract is
-fixed now, so PART 2 only has to fill in the socket loop. Until then the
-source reports itself honestly: configured if there is a key, unconfigured
-if there is not, and no data either way.
+The live socket loop lives in :mod:`app.services.relays.ais_relay` and
+writes straight into ``ais_track`` as messages arrive, so there is nothing
+for this adapter to download. It stays in the registry as the honest
+answer to "is this source configured": yes with a key, no without one, and
+no per-day data either way.
 """
 
 from __future__ import annotations
@@ -29,9 +30,9 @@ class AISStreamAdapter(DataSource):
     async def fetch(self, day: date) -> Any:
         self._require_configured()
         raise NotImplementedError(
-            "the AISStream relay is implemented in PART 2; messages land in "
-            "the ais_track table as they arrive rather than being fetched "
-            "per-day"
+            "the AISStream relay lives in app/services/relays/ais_relay.py; "
+            "messages land in the ais_track table as they arrive rather than "
+            "being fetched per-day"
         )
 
     def regrid(self, raw: Any) -> np.ndarray:

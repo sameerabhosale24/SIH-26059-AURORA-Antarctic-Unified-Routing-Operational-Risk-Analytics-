@@ -33,9 +33,9 @@ function Row({ row }: { row: SourceRow }): JSX.Element {
   const state = useStaleness(row.key);
 
   return (
-    <div className="border-b border-aurora-border/40 py-2 last:border-b-0">
+    <div className="border-b border-ocean-800/40 py-2 last:border-b-0">
       <div className="flex items-center justify-between gap-2">
-        <span className="truncate text-xs text-aurora-text">{row.label}</span>
+        <span className="truncate text-xs text-ocean-100">{row.label}</span>
 
         {state.isMissing ? (
           <Badge tone="crit">No data</Badge>
@@ -47,18 +47,18 @@ function Row({ row }: { row: SourceRow }): JSX.Element {
       </div>
 
       <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-[11px]">
-        <dt className="text-aurora-muted">Age</dt>
-        <dd className="text-right font-mono text-aurora-text">
+        <dt className="text-ocean-300">Age</dt>
+        <dd className="text-right font-mono text-ocean-100">
           {state.ageSeconds === null ? EM_DASH : fmtDuration(state.ageSeconds)}
         </dd>
 
-        <dt className="text-aurora-muted">Threshold</dt>
-        <dd className="text-right font-mono text-aurora-muted">
+        <dt className="text-ocean-300">Threshold</dt>
+        <dd className="text-right font-mono text-ocean-300">
           {fmtDuration(STALENESS_THRESHOLDS[row.key])}
         </dd>
 
-        <dt className="text-aurora-muted">Last payload</dt>
-        <dd className="text-right font-mono text-aurora-muted">
+        <dt className="text-ocean-300">Last payload</dt>
+        <dd className="text-right font-mono text-ocean-300">
           {state.lastUpdated === null
             ? EM_DASH
             : fmtDateTime(new Date(state.lastUpdated).toISOString())}
@@ -103,7 +103,7 @@ export function DataFreshnessPanel({ onClose }: { onClose?: () => void }): JSX.E
           <button
             type="button"
             onClick={onClose}
-            className="text-xs text-aurora-muted transition-colors hover:text-aurora-text"
+            className="text-xs text-ocean-300 transition-colors hover:text-ocean-100"
             aria-label="Close data freshness panel"
           >
             ×
@@ -112,7 +112,7 @@ export function DataFreshnessPanel({ onClose }: { onClose?: () => void }): JSX.E
       }
       className="shadow-lg shadow-black/40"
     >
-      <div className="mb-2 flex flex-wrap items-center gap-1.5 border-b border-aurora-border pb-2">
+      <div className="mb-2 flex flex-wrap items-center gap-1.5 border-b border-ocean-800 pb-2">
         <Badge tone={apiStatus === 'ok' ? 'ok' : apiStatus === 'degraded' ? 'warn' : 'crit'}>
           API {apiStatus}
         </Badge>
@@ -133,7 +133,7 @@ export function DataFreshnessPanel({ onClose }: { onClose?: () => void }): JSX.E
         ))}
       </div>
 
-      <p className="mt-2 text-[10px] leading-snug text-aurora-muted">
+      <p className="mt-2 text-[10px] leading-snug text-ocean-300">
         Age is measured from when this client last received the payload, not from
         the producer's own timestamp.
       </p>

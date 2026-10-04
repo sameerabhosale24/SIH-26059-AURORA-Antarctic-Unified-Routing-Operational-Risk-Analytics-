@@ -34,6 +34,40 @@ LCC_PROJ = (
 # Source CRS of the grid itself.
 ROI_CRS = "EPSG:4326"
 
+# ---------------------------------------------------------------------------
+# Route grid — the canvas the SIC display frames are painted on.
+#
+# The SIC grid above is a *model* grid: `[101, 361]` over 10°W–80°E and
+# 75°S–50°S, frozen by the forecaster's weights and therefore untouchable.
+# A PNG whose extent is that grid ends exactly where the data ends, which is
+# how the SIC layer used to land on the map as a rectangle with a hard edge
+# at 50°S.
+#
+# The route grid is a *display* grid instead: `[185, 321]` at 0.25°, the same
+# resolution as the SIC grid so the two can be matched cell-to-cell without
+# resampling. It spans the Cape Town → Antarctica corridor the map frames
+# (5°E–85°E, 78°S–32°S) and, in latitude, the whole SIC region plus the water
+# north of it.
+#
+# It is deliberately *narrower in longitude than the SIC grid* (321 cells vs
+# 361): the SIC product runs 10°W–80°E, the corridor runs 10°E–85°E, and the
+# canvas only has to hold what the map shows. The westernmost SIC cells
+# (10°W–5°E) therefore have no home on the canvas and are left out rather
+# than squeezed — see `place_sic_in_route_grid_nan`, which places by nearest
+# cell centre and marks everything more than one cell away as no-data.
+#
+# MAX bounds are EXCLUSIVE, exactly like the ROI bounds above:
+#
+#     lat = -78.0 + arange(185) * 0.25  -> -78.00 .. -32.00
+#     lon =   5.0 + arange(321) * 0.25  ->   5.00 ..  85.00
+ROUTE_ROI_LAT_MIN = -78.0
+ROUTE_ROI_LAT_MAX = -31.75
+ROUTE_ROI_LON_MIN = 5.0
+ROUTE_ROI_LON_MAX = 85.25
+
+ROUTE_SHAPE = (185, 321)
+ROUTE_RES = 0.25
+
 # Named channels of the forecaster input window, in frozen order.
 CHANNEL_NAMES = [
     "SIC",             # 0

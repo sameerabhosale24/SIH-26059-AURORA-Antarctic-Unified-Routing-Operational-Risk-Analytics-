@@ -1,8 +1,10 @@
-"""Ship GPS (NMEA over TCP/UDP) — stubbed for PART 2.
+"""Ship GPS (NMEA over TCP/UDP) — not a per-day fetch.
 
 Own-ship telemetry lands in ``vessel_state``, which is already migrated.
-The socket reader and the NMEA sentence parser arrive with the real-time
-relays.
+The socket reader and the NMEA parser live in
+:mod:`app.services.relays.gps_relay` and push continuously; this adapter
+exists only so the source list can report whether an endpoint is
+configured.
 """
 
 from __future__ import annotations
@@ -27,9 +29,9 @@ class GPSNMEAAdapter(DataSource):
     async def fetch(self, day: date) -> Any:
         self._require_configured()
         raise NotImplementedError(
-            "the GPS socket reader is implemented in PART 2; NMEA sentences "
-            "are pushed continuously into vessel_state rather than fetched "
-            "per-day"
+            "the GPS socket reader lives in app/services/relays/gps_relay.py; "
+            "NMEA sentences are pushed continuously into vessel_state rather "
+            "than fetched per-day"
         )
 
     def regrid(self, raw: Any) -> np.ndarray:

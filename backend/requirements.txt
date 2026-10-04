@@ -23,6 +23,10 @@ redis>=5.0
 python-dotenv>=1.0
 httpx>=0.27
 
+# AIS relay: one WebSocket session to the AISStream endpoint, opened with a
+# single subscription message inside the handshake window.
+websockets>=12
+
 # ---------------------------------------------------------------------------
 # Data infrastructure
 # ---------------------------------------------------------------------------
@@ -30,6 +34,14 @@ httpx>=0.27
 # Geospatial type support for the geometry columns (iceberg points, route
 # linestrings, alarm and drift-cone polygons).
 geoalchemy2>=0.15
+
+# Point-in-polygon tests for iceberg drift cones, and clipping the
+# downloaded coastline to the ROI.
+shapely>=2.0
+
+# Natural Earth land polygons for scripts/download_coastline.py — the clip
+# and simplify steps run on a GeoDataFrame.
+geopandas>=1.0
 
 # Regridding: nearest-neighbour resampling from polar stereographic and
 # EASE-Grid sources onto the ROI grid.

@@ -54,19 +54,24 @@ def _sample_to_roi(field):
     """Bounding-box crop, then nearest-sample onto the ROI axes."""
     import xarray as xr
 
-    lat = field["lat"]
-    lon = field["lon"]
+    # The CDS client now returns CF-compliant names (latitude/longitude) on
+    # some product versions and the legacy lat/lon on others — resolve
+    # defensively instead of assuming one spelling.
+    lat_name = "latitude" if "latitude" in field.coords else "lat"
+    lon_name = "longitude" if "longitude" in field.coords else "lon"
+    lat = field[lat_name]
+    lon = field[lon_name]
     west, south, east, north = roi_bounds()
 
     lat_first, lat_last = float(lat[0]), float(lat[-1])
     lon_first, lon_last = float(lon[0]), float(lon[-1])
     lat_slice = slice(lat_first, lat_last) if lat_first > lat_last else slice(lat_last, lat_first)
     lon_slice = slice(lon_first, lon_last) if lon_first < lon_last else slice(lon_last, lon_first)
-    cropped = field.sel(lat=lat_slice, lon=lon_slice)
+    cropped = field.sel({lat_name: lat_slice, lon_name: lon_slice})
 
     return cropped.interp(
-        lat=xr.DataArray(roi_lat_array(), dims="lat"),
-        lon=xr.DataArray(roi_lon_array(), dims="lon"),
+        {lat_name: xr.DataArray(roi_lat_array(), dims=lat_name),
+         lon_name: xr.DataArray(roi_lon_array(), dims=lon_name)},
         method="nearest",
     )
 

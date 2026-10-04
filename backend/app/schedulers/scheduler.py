@@ -1,10 +1,18 @@
-"""Scheduled background jobs — PART 1 scope.
+"""Scheduled background jobs.
 
-Three jobs, and only these three:
+Six jobs, in two groups.
+
+Data in (PART 1):
 
 * ``sic_daily``          03:00 UTC — forecast cycle, iceberg ingest, version bump
 * ``thickness_weekly``   Monday 04:00 UTC — CS2SMOS thickness ingest
 * ``freshness_check``    every hour — staleness audit and alarms
+
+Operational out (PART 2):
+
+* ``route_optimize``     at ``ROUTE_JOB_HOURS`` — re-plan the own ship's route
+* ``alarm_pass``         every ``ALARM_POLL_SECONDS`` — evaluate the alarm rules
+* ``cleanup_daily``      at ``CLEANUP_JOB_HOUR`` — retention and disk report
 
 Every job follows the same shape: log start, do the work, log end with
 duration and status, update ``data_version`` **only on success**, and never
@@ -22,6 +30,7 @@ from datetime import date, datetime, timedelta, timezone
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.triggers.interval import IntervalTrigger
 
 from app.adapters import ADAPTERS
 from app.config import get_settings
@@ -31,6 +40,9 @@ logger = logging.getLogger("aurora.scheduler")
 SIC_JOB_ID = "sic_daily"
 THICKNESS_JOB_ID = "thickness_weekly"
 FRESHNESS_JOB_ID = "freshness_check"
+ROUTE_JOB_ID = "route_optimize"
+ALARM_JOB_ID = "alarm_pass"
+CLEANUP_JOB_ID = "cleanup_daily"
 
 _scheduler: BackgroundScheduler | None = None
 
@@ -126,6 +138,13 @@ def job_sic_daily() -> dict:
     day = _today()
     summary: dict = {}
     with _job_context(SIC_JOB_ID):
+        # Fetch start, not fetch end: a download that died halfway must not
+        # leave a truncated file behind for the next run to treat as
+        # complete, and a failure to clean must never stop the fetch.
+        from app.services.storage_manager import ensure_raw_temp_clean
+
+        ensure_raw_temp_clean()
+
         summary = run_sic_cycle(day)
 
         # Iceberg ingest is independent of the forecast: a bad forecast day
@@ -281,6 +300,70 @@ def _recent_stale_alarm(source: str) -> bool:
     return False
 
 
+def job_route_optimize() -> dict:
+    """At each configured planning hour — re-plan the own ship's route.
+
+    One run per hour, not a stream: the inputs are fields that change on a
+    schedule of their own (SIC daily, ERA5 and CMEMS on their own cycles),
+    and replanning faster than the inputs move would only produce routes
+    that differ by noise. ``optimize`` persists the run and publishes it,
+    so this job's job is to pick the ship and to log what came back.
+    """
+    from app.services import route_optimizer
+
+    settings = get_settings()
+    vessel_id = settings.OWN_SHIP_VESSEL_ID
+    with _job_context(ROUTE_JOB_ID):
+        run = route_optimizer.optimize(vessel_id, datetime.now(timezone.utc))
+        summary = {
+            "id": getattr(run, "id", None),
+            "vessel_id": run.vessel_id,
+            "status": run.status,
+            "routes": len(run.routes or []),
+            "notes": run.notes,
+        }
+        logger.info(
+            "route pass: vessel %s status=%s routes=%d",
+            vessel_id, run.status, summary["routes"],
+        )
+        return summary
+
+
+def job_alarm_pass() -> dict:
+    """Every ``ALARM_POLL_SECONDS`` — evaluate every rule over every ship.
+
+    The pass is idempotent by design: a rule that is still true does not
+    raise a second alarm, because :func:`app.services.alarm_engine` checks
+    for an existing one first. That is what makes a short interval safe —
+    running it sixty times an hour costs a query, not sixty alarms.
+    """
+    from app.services.alarm_engine import run_pass
+
+    with _job_context(ALARM_JOB_ID):
+        return run_pass()
+
+
+def job_cleanup() -> dict:
+    """At ``CLEANUP_JOB_HOUR`` — apply retention and report disk usage.
+
+    Two calls in one job because they answer the same question: how much
+    space this deployment is using and whether it is still under the
+    configured warning lines. The report is returned so it reaches the
+    scheduler log; the numbers are also available live from
+    ``GET /api/health``.
+    """
+    from app.services.storage_manager import cleanup_raw_temp, cleanup_sic_frames, report_disk_usage
+
+    with _job_context(CLEANUP_JOB_ID):
+        frames = cleanup_sic_frames()
+        temp = cleanup_raw_temp()
+        usage = report_disk_usage()
+        over = usage.get("over_warn") or []
+        if over:
+            logger.warning("disk usage over the warning line for: %s", ", ".join(over))
+        return {"frames": frames, "raw_temp": temp, "usage": usage}
+
+
 # ---------------------------------------------------------------------------
 # Lifecycle
 # ---------------------------------------------------------------------------
@@ -313,6 +396,35 @@ def create_scheduler() -> BackgroundScheduler:
         max_instances=1,
         coalesce=True,
         misfire_grace_time=1800,
+    )
+
+    hours = settings.route_job_hours
+    scheduler.add_job(
+        job_route_optimize,
+        CronTrigger(hour=",".join(str(h) for h in hours), minute=0),
+        id=ROUTE_JOB_ID,
+        name="Route optimization (planning hours)",
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=1800,
+    )
+    scheduler.add_job(
+        job_alarm_pass,
+        IntervalTrigger(seconds=max(int(settings.ALARM_POLL_SECONDS), 10)),
+        id=ALARM_JOB_ID,
+        name="Alarm evaluation (interval)",
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=300,
+    )
+    scheduler.add_job(
+        job_cleanup,
+        CronTrigger(hour=settings.CLEANUP_JOB_HOUR, minute=0),
+        id=CLEANUP_JOB_ID,
+        name="Retention and disk report (daily)",
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=3600,
     )
     return scheduler
 

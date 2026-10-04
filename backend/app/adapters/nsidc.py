@@ -20,6 +20,7 @@ import numpy as np
 
 from app.adapters.base import DataSource
 from app.config import get_settings
+from app.services.field_storage import storage_root
 from app.utils.grid import roi_lat_lon_meshgrid
 from app.utils.rasters import validate_roi
 
@@ -27,11 +28,17 @@ RADIUS_OF_INFLUENCE_M = 50_000.0
 EPSG_NORTH = "EPSG:3413"
 EPSG_SOUTH = "EPSG:3976"
 
-CDR_VARIABLE = "cdr_sea_ice_concentration"
+# NOAA CDR v4 (G10016) names the field cdr_seaice_conc; the NASA CDR v6
+# (G02135) called it cdr_sea_ice_concentration. Accept both rather than
+# breaking on a rename between product generations.
+CDR_VARIABLES = ("cdr_seaice_conc", "cdr_sea_ice_concentration")
 TIME_VARIABLES = ("time", "t")
 
-# NSIDC Earthdata login (DAAC) — same credentials as Earthdata Login.
-OCEAN_DATA_URL = "https://n5eil01u.ecs.nsidc.org/DP4/ICE_MEASURE/G02135/006"
+# NOAA/NSIDC NRT CDR v4 (G10016) on the anonymous NOAA data pool. The old
+# ECS data pool (n5eil01u.ecs.nsidc.org) is unreachable from this network and
+# has been superseded; this endpoint needs no Earthdata credentials.
+NOAA_NRT_BASE = "https://noaadata.apps.nsidc.org/NOAA/G10016_V4/south/daily"
+NRT_FILENAME = "sic_pss25_{day:%Y%m%d}_am2_icdr_v04r00.nc"
 
 
 class NSIDCAdapter(DataSource):
@@ -44,19 +51,15 @@ class NSIDCAdapter(DataSource):
 
     async def fetch(self, day: date) -> Any:
         self._require_configured()
-        settings = get_settings()
         try:
             import httpx
         except ImportError as exc:  # pragma: no cover — dependency guard
             raise RuntimeError("httpx is required for the NSIDC adapter") from exc
 
-        url = f"{OCEAN_DATA_URL}/{day:%Y}/{day:%m}/SeaIce_Daily_{day:%Y%m%d}_v2.0.nc"
-        self.logger.info("downloading NSIDC CDR for %s", day.isoformat())
+        url = f"{NOAA_NRT_BASE}/{day:%Y}/{NRT_FILENAME.format(day=day)}"
+        self.logger.info("downloading NSIDC NRT CDR for %s", day.isoformat())
         async with httpx.AsyncClient(timeout=120.0, follow_redirects=True) as client:
-            response = await client.get(
-                url,
-                auth=(settings.NSIDC_USERNAME, settings.NSIDC_PASSWORD),
-            )
+            response = await client.get(url)
             response.raise_for_status()
             payload = response.content
 
@@ -65,7 +68,12 @@ class NSIDCAdapter(DataSource):
         except ImportError as exc:  # pragma: no cover
             raise RuntimeError("xarray is required for the NSIDC adapter") from exc
 
-        return xr.open_dataset(__import__("io").BytesIO(payload), decode_cf=True)
+        # Keep the raw download on disk: a regrid failure is then debuggable
+        # instead of leaving the payload only in a closed buffer.
+        target = storage_root() / "raw_temp" / "nsidc" / NRT_FILENAME.format(day=day)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(payload)
+        return xr.open_dataset(target, decode_cf=True)
 
     def regrid(self, raw: Any) -> np.ndarray:
         """Nearest-neighbour onto the ROI grid; NaN outside 50 km."""
@@ -74,9 +82,10 @@ class NSIDCAdapter(DataSource):
 
         if not isinstance(raw, xr.Dataset):
             raise TypeError(f"nsidc regrid expects an xarray.Dataset, got {type(raw)!r}")
-        if CDR_VARIABLE not in raw:
+        variable = next((name for name in CDR_VARIABLES if name in raw), None)
+        if variable is None:
             raise KeyError(
-                f"NSIDC file has no '{CDR_VARIABLE}' variable; found "
+                f"NSIDC file has none of {list(CDR_VARIABLES)}; found "
                 f"{list(raw.data_vars)}"
             )
 
@@ -86,7 +95,7 @@ class NSIDCAdapter(DataSource):
                 dataset = dataset.isel({candidate: 0})
                 break
 
-        concentration = dataset[CDR_VARIABLE].squeeze()
+        concentration = dataset[variable].squeeze()
         if concentration.ndim != 2:
             raise ValueError(
                 f"expected a 2D SIC field after squeezing, got shape "
@@ -94,16 +103,19 @@ class NSIDCAdapter(DataSource):
             )
 
         lons, lats = self._source_coordinates(dataset, concentration)
-        target_lons, target_lats = roi_lat_lon_meshgrid()
+        # roi_lat_lon_meshgrid() documents (lat2d, lon2d) — unpack in that
+        # order or every target coordinate is swapped and the resample
+        # silently returns all-NaN.
+        target_lats, target_lons = roi_lat_lon_meshgrid()
 
         source = SwathDefinition(lons=lons, lats=lats)
         target = SwathDefinition(lons=target_lons, lats=target_lats)
 
         result = kd_tree.resample_nearest(
             source,
+            np.asarray(concentration.values, dtype=np.float64),
             target,
-            source_data=np.asarray(concentration.values, dtype=np.float64),
-            radius_of_influence=RADIUS_OF_INFLUENCE_M,
+            RADIUS_OF_INFLUENCE_M,
             fill_value=np.nan,
             reduce_data=True,
         )
@@ -119,13 +131,16 @@ class NSIDCAdapter(DataSource):
         return validate_roi(grid, "nsidc.sic")
 
     def _source_coordinates(self, dataset, concentration) -> tuple[np.ndarray, np.ndarray]:
-        """Per-pixel lon/lat shipped in the file.
+        """Per-pixel lon/lat for the source grid.
 
-        Every distribution of the NSIDC CDR carries ``latitude`` and
-        ``longitude`` arrays, so there is no need to reconstruct the grid from
-        the CRS. If they are absent the file is not one we understand, and
-        guessing a geotransform is exactly how a field ends up 500 km from
-        where it belongs.
+        Two layouts are accepted, in order:
+
+        1. ``longitude``/``latitude`` arrays shipped in the file (the NASA
+           CDR layout).
+        2. ``x``/``y`` polar-stereographic axes plus a CF ``grid_mapping``
+           with a ``proj4text`` (the NOAA CDR v4 layout). The lon/lat grid is
+           then computed from that declared CRS — from the file's own
+           projection parameters, not from an assumed geotransform.
         """
         for lon_name in ("longitude", "lon"):
             for lat_name in ("latitude", "lat"):
@@ -135,9 +150,43 @@ class NSIDCAdapter(DataSource):
                     if lons.shape == concentration.shape and lats.shape == concentration.shape:
                         return lons, lats
 
+        if "x" in dataset.coords and "y" in dataset.coords:
+            lons, lats = self._project_xy_to_lonlat(dataset)
+            if lons.shape == concentration.shape and lats.shape == concentration.shape:
+                return lons, lats
+
         raise ValueError(
             "NSIDC file carries no longitude/latitude variables matching the "
-            f"SIC field shape {tuple(concentration.shape)}; expected "
-            "'longitude'/'latitude' (or 'lon'/'lat') in the file. "
-            "Refusing to assume a geotransform."
+            f"SIC field shape {tuple(concentration.shape)}, and no usable "
+            "x/y grid mapping; found "
+            f"coordinates {list(dataset.coords)}."
         )
+
+    def _project_xy_to_lonlat(self, dataset) -> tuple[np.ndarray, np.ndarray]:
+        """Transform the file's ``x``/``y`` axes to lon/lat via its own CRS."""
+        try:
+            import pyproj
+        except ImportError as exc:  # pragma: no cover — dependency guard
+            raise RuntimeError("pyproj is required to read the polar-stereographic grid") from exc
+
+        proj4 = None
+        for candidate in ("crs", "spatial_ref", "grid_mapping"):
+            if candidate in dataset.variables:
+                attrs = dataset[candidate].attrs
+                proj4 = attrs.get("proj4text")
+                if proj4:
+                    break
+        if not proj4:
+            raise ValueError(
+                "NSIDC x/y grid has no grid_mapping variable carrying "
+                "'proj4text'; cannot derive lon/lat without the declared CRS."
+            )
+
+        x = np.asarray(dataset["x"].values, dtype=np.float64)
+        y = np.asarray(dataset["y"].values, dtype=np.float64)
+        xx, yy = np.meshgrid(x, y)
+        transformer = pyproj.Transformer.from_crs(
+            pyproj.CRS.from_proj4(proj4), pyproj.CRS.from_epsg(4326), always_xy=True
+        )
+        lons, lats = transformer.transform(xx, yy)
+        return np.asarray(lons, dtype=np.float64), np.asarray(lats, dtype=np.float64)

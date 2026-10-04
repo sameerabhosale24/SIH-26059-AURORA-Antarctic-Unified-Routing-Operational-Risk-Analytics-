@@ -43,6 +43,19 @@ import type { UiProjection } from '@/stores/uiStore';
 /** Property key marking the managed layer group. */
 export const LAYER_GROUP_KEY = 'aurora-layers';
 
+/**
+ * The Cape Town → Antarctic coast corridor, `[lon_min, lat_min, lon_max, lat_max]`.
+ *
+ * This — not the SIC ROI — is what the map opens framed on: an operator has to
+ * see the whole voyage, port of departure included, before anything else on the
+ * chart means anything. The SIC ROI stays an internal detail of the map (it
+ * frames the raster and the coverage rectangle) and never drives the view.
+ */
+export const CORRIDOR_BOUNDS: [number, number, number, number] = [10, -78, 85, -30];
+
+/** Centre the corridor view is declared at, before `fit` resolves the scale. */
+export const CORRIDOR_CENTER: [number, number] = [40, -54];
+
 /** Padding, in px, applied when fitting an extent into the viewport. */
 const FIT_PADDING: [number, number, number, number] = [24, 24, 24, 24];
 
@@ -68,18 +81,14 @@ function roiBox(roi: Roi): [number, number, number, number] {
 }
 
 /**
- * Build the AURORA map shell into `target`, framed on the supplied ROI.
+ * Build the AURORA map shell into `target`, framed on the Cape Town corridor.
  *
  * The projection is registered as a side effect, so callers do not need to
- * remember to do it.
+ * remember to do it. The supplied ROI is kept with the map (it is what the SIC
+ * raster and its coverage rectangle are framed on) but does not set the view.
  */
 export function createMap(target: HTMLElement, roi: Roi): Map {
   registerLccProjection();
-
-  const centre: [number, number] = [
-    (roi.lon_min + roi.lon_max) / 2,
-    (roi.lat_min + roi.lat_max) / 2,
-  ];
 
   const map = new Map({
     target,
@@ -100,20 +109,21 @@ export function createMap(target: HTMLElement, roi: Roi): Map {
     // `center` is lon/lat: the constructor converts it via `fromUserCoordinate`.
     view: new View({
       projection: lccProjection(),
-      center: centre,
+      center: CORRIDOR_CENTER,
       resolution: 100_000,
       constrainResolution: false,
       showFullExtent: true,
     }),
   });
 
-  // Frame the ROI. OpenLayers 9 does the fit arithmetic inside `View.fit`
+  // Frame the corridor — Cape Town at the top, the Antarctic coast at the
+  // bottom. OpenLayers 9 does the fit arithmetic inside `View.fit`
   // (`ol/extent.fit` was removed from the public API) and it needs a real
   // pixel size, which only exists once the container is laid out.
   try {
-    map.getView().fit(roiBox(roi), { size: viewportSize(map), padding: FIT_PADDING });
+    map.getView().fit(CORRIDOR_BOUNDS, { size: viewportSize(map), padding: FIT_PADDING });
   } catch (cause) {
-    console.warn('[aurora] could not fit ROI to viewport; using declared centre/resolution', cause);
+    console.warn('[aurora] could not fit the corridor to the viewport; using declared centre/resolution', cause);
   }
 
   const layers = new LayerGroup({ layers: [] });
@@ -124,7 +134,7 @@ export function createMap(target: HTMLElement, roi: Roi): Map {
   // The chart background is not a layer — it is the colour of empty canvas,
   // so it has to be set on the viewport or an un-layered map shows the
   // container's colour instead of the palette's.
-  setMapBackground(map, getPalette('day').background);
+  setMapBackground(map, getPalette().background);
   rois.set(map, roi);
 
   singleton = map;
@@ -184,12 +194,15 @@ export function applyProjectionPreset(
     return;
   }
 
-  if (roi) {
-    try {
-      view.fit(roiBox(roi), { size, padding: FIT_PADDING });
-    } catch (cause) {
-      console.warn('[aurora] could not frame preset', preset, cause);
-    }
+  // `corridor` frames the whole Cape Town → station corridor, the view the
+  // console opens on. `polar` frames the SIC region instead, which is what the
+  // polar view exists to inspect.
+  const box = preset === 'corridor' || !roi ? CORRIDOR_BOUNDS : roiBox(roi);
+
+  try {
+    view.fit(box, { size, padding: FIT_PADDING });
+  } catch (cause) {
+    console.warn('[aurora] could not frame preset', preset, cause);
   }
 }
 
@@ -198,9 +211,8 @@ export function applyProjectionPreset(
  *
  * OpenLayers has no "background" option on `Map` — an area with no layer
  * beneath it is simply transparent — so the colour lives on the viewport
- * element. Called once at construction and again whenever the display mode
- * changes, which is what makes Day/Dusk/Night visibly different on a chart
- * that has no ENC loaded yet.
+ * element. Called once at construction, which is what gives a chart with no
+ * ENC loaded yet the ocean colour rather than the container's.
  */
 export function setMapBackground(map: Map, color: string): void {
   map.getViewport().style.backgroundColor = color;
@@ -223,6 +235,19 @@ export function getLayerGroup(map: Map): LayerGroup {
 /** The most recently created map, or null before the map has mounted. */
 export function getMap(): Map | null {
   return singleton;
+}
+
+/**
+ * The ROI this map was built with — the SIC region, in WGS84 degrees.
+ *
+ * Kept as an internal detail of the map rather than a view input: the SIC
+ * raster, its coverage rectangle and the `polar` preset all frame on it, and
+ * nothing else does.
+ *
+ * @returns null when the map was not built by {@link createMap}.
+ */
+export function getMapRoi(map: Map): Roi | null {
+  return rois.get(map) ?? null;
 }
 
 /** Forget the singleton. Call after disposing the map. */

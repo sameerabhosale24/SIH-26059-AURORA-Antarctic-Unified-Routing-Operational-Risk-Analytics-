@@ -18,9 +18,7 @@ import {
   type StalenessSource,
 } from '@/config/constants';
 import { API_BASE, WS_BASE } from '@/config/env';
-import { DISPLAY_MODES, type DisplayMode } from '@/config/palettes';
 import { LAYERS } from '@/map/layers';
-import { useUiStore } from '@/stores/uiStore';
 import { EM_DASH, fmtDuration } from '@/utils/formatting';
 
 const SOURCES: readonly StalenessSource[] = [
@@ -33,42 +31,6 @@ const SOURCES: readonly StalenessSource[] = [
   'enc',
 ];
 
-function DisplayModePicker(): JSX.Element {
-  const displayMode = useUiStore((state) => state.displayMode);
-  const setDisplayMode = useUiStore((state) => state.setDisplayMode);
-
-  return (
-    <Panel title="Display mode">
-      <div className="flex overflow-hidden rounded-sm border border-aurora-border">
-        {DISPLAY_MODES.map((mode: DisplayMode) => {
-          const active = mode === displayMode;
-
-          return (
-            <button
-              key={mode}
-              type="button"
-              aria-pressed={active}
-              onClick={() => setDisplayMode(mode)}
-              className={`flex-1 px-2 py-1.5 text-[10px] uppercase tracking-[0.14em] transition-colors ${
-                active
-                  ? 'bg-aurora-accent/15 text-aurora-accent'
-                  : 'text-aurora-muted hover:text-aurora-text'
-              }`}
-            >
-              {mode}
-            </button>
-          );
-        })}
-      </div>
-
-      <p className="mt-2 text-[10px] leading-snug text-aurora-muted">
-        Re-portrays every layer and the legend. Never triggers a refetch — the
-        palette is applied to data already in memory.
-      </p>
-    </Panel>
-  );
-}
-
 function EndpointsPanel(): JSX.Element {
   return (
     <Panel title="Endpoints">
@@ -78,8 +40,8 @@ function EndpointsPanel(): JSX.Element {
         <Stat label="Version poll" value={fmtDuration(VERSION_POLL_INTERVAL_MS / 1000)} />
       </StatGroup>
 
-      <p className="mt-2 text-[10px] leading-snug text-aurora-muted">
-        Set at build time from <code className="text-aurora-text">.env</code>; changing
+      <p className="mt-2 text-[10px] leading-snug text-ocean-300">
+        Set at build time from <code className="text-ocean-100">.env</code>; changing
         them requires a rebuild.
       </p>
     </Panel>
@@ -91,7 +53,7 @@ function ThresholdsPanel(): JSX.Element {
     <Panel title="Staleness thresholds" bodyClassName="p-0">
       <table className="w-full border-collapse text-left text-[11px]">
         <thead>
-          <tr className="border-b border-aurora-border text-[10px] uppercase tracking-wide text-aurora-muted">
+          <tr className="border-b border-ocean-800 text-[10px] uppercase tracking-wide text-ocean-300">
             <th className="px-3 py-1.5 font-medium">Source</th>
             <th className="px-3 py-1.5 text-right font-medium">Stale after</th>
           </tr>
@@ -99,9 +61,9 @@ function ThresholdsPanel(): JSX.Element {
 
         <tbody>
           {SOURCES.map((source) => (
-            <tr key={source} className="border-b border-aurora-border/40 last:border-b-0">
-              <td className="px-3 py-1.5 text-aurora-text">{source}</td>
-              <td className="px-3 py-1.5 text-right font-mono text-aurora-muted">
+            <tr key={source} className="border-b border-ocean-800/40 last:border-b-0">
+              <td className="px-3 py-1.5 text-ocean-100">{source}</td>
+              <td className="px-3 py-1.5 text-right font-mono text-ocean-300">
                 {fmtDuration(STALENESS_THRESHOLDS[source])}
               </td>
             </tr>
@@ -121,7 +83,7 @@ function CadencePanel(): JSX.Element {
         ))}
       </StatGroup>
 
-      <p className="mt-2 text-[10px] leading-snug text-aurora-muted">
+      <p className="mt-2 text-[10px] leading-snug text-ocean-300">
         Expected intervals as documented by the backend. Actual arrival is
         measured separately and shown in Data freshness.
       </p>
@@ -134,7 +96,7 @@ function LayerDefaultsPanel({ className = '' }: { className?: string }): JSX.Ele
     <Panel className={className} title="Layer defaults" bodyClassName="p-0">
       <table className="w-full border-collapse text-left text-[11px]">
         <thead>
-          <tr className="border-b border-aurora-border text-[10px] uppercase tracking-wide text-aurora-muted">
+          <tr className="border-b border-ocean-800 text-[10px] uppercase tracking-wide text-ocean-300">
             <th className="px-3 py-1.5 font-medium">Layer</th>
             <th className="px-3 py-1.5 text-right font-medium">Visible</th>
             <th className="px-3 py-1.5 text-right font-medium">Opacity</th>
@@ -144,8 +106,8 @@ function LayerDefaultsPanel({ className = '' }: { className?: string }): JSX.Ele
 
         <tbody>
           {LAYERS.map((layer) => (
-            <tr key={layer.id} className="border-b border-aurora-border/40 last:border-b-0">
-              <td className="px-3 py-1.5 text-aurora-text">{layer.title}</td>
+            <tr key={layer.id} className="border-b border-ocean-800/40 last:border-b-0">
+              <td className="px-3 py-1.5 text-ocean-100">{layer.title}</td>
 
               <td className="px-3 py-1.5 text-right">
                 {layer.defaultVisible ? (
@@ -155,11 +117,11 @@ function LayerDefaultsPanel({ className = '' }: { className?: string }): JSX.Ele
                 )}
               </td>
 
-              <td className="px-3 py-1.5 text-right font-mono text-aurora-muted">
+              <td className="px-3 py-1.5 text-right font-mono text-ocean-300">
                 {Math.round(layer.defaultOpacity * 100)}%
               </td>
 
-              <td className="px-3 py-1.5 text-right font-mono text-aurora-muted">
+              <td className="px-3 py-1.5 text-right font-mono text-ocean-300">
                 {layer.stalenessKey ?? EM_DASH}
               </td>
             </tr>
@@ -174,7 +136,6 @@ export function SettingsView(): JSX.Element {
   return (
     <VesselGate>
       <div className="grid h-full min-h-0 gap-2 overflow-auto p-2 lg:grid-cols-2">
-        <DisplayModePicker />
         <EndpointsPanel />
         <ThresholdsPanel />
         <CadencePanel />

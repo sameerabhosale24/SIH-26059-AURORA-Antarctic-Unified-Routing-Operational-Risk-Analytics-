@@ -22,6 +22,7 @@ import type Map from 'ol/Map';
 
 import { getPalette } from '@/config/palettes';
 import { getRoi } from '@/services/api';
+import { StationInfoPanel } from '@/panels/StationInfoPanel';
 import { useUiStore } from '@/stores/uiStore';
 import { useVesselStore } from '@/stores/vesselStore';
 import {
@@ -33,6 +34,7 @@ import {
   setMapBackground,
 } from './mapSetup';
 import { LAYERS, isLayerVisible, layerOpacity } from './layers';
+import { setupStationInteraction } from './stationInteraction';
 import { isSourceStale } from '@/hooks/useStaleness';
 import { STALE_LAYER_OPACITY } from '@/config/constants';
 import type { AuroraLayer, AuroraOlLayer } from './layers/types';
@@ -63,8 +65,9 @@ export function MapView(): JSX.Element {
 
   const entriesRef = useRef<Entry[]>([]);
   const syncRef = useRef<(() => void) | null>(null);
+  /** An empty SIC manifest is expected before the first scheduler run. */
+  const sicMissingLoggedRef = useRef(false);
 
-  const displayMode = useUiStore((selector) => selector.displayMode);
   const projection = useUiStore((selector) => selector.projection);
   const followShip = useUiStore((selector) => selector.followShip);
   const layerVisibility = useUiStore((selector) => selector.layerVisibility);
@@ -127,17 +130,26 @@ export function MapView(): JSX.Element {
 
         if (entry.current) {
           stack.push(entry.current);
-          // Layers are built with the day palette. Bring one in line with the
-          // active mode at the moment it is attached, so a night-mode operator
-          // never sees a single day-bright frame.
-          entry.def.restyle(entry.current, getPalette(useUiStore.getState().displayMode));
+          // Layers are built with the day palette. Re-apply it at the moment
+          // the layer is attached so a layer built before a palette change
+          // never paints a stale colour.
+          entry.def.restyle(entry.current, getPalette());
         }
 
         entry.attached = entry.current;
       }
 
       const layer = entry.current;
-      if (!layer) return;
+      if (!layer) {
+        // A layer with nothing to draw is never attached — that is the whole
+        // point of the contract. Say so once for the SIC case, which is an
+        // expected state rather than a fault, then stay quiet.
+        if (entry.def.id === 'sic' && !sicMissingLoggedRef.current) {
+          sicMissingLoggedRef.current = true;
+          console.log('SIC layer not added: no frames available');
+        }
+        return;
+      }
 
       const ui = useUiStore.getState();
       layer.setVisible(isLayerVisible(entry.def.id, ui));
@@ -203,20 +215,15 @@ export function MapView(): JSX.Element {
   }, [layerVisibility, layerOpacityState]);
 
   /* ---------------------------------------------------------------- *
-   * 4. Display mode — restyle only, never refetch
+   * 4. Canvas background
+   *
+   * The empty canvas has no layer to carry a colour, so it is painted on the
+   * viewport directly, once, when the map appears.
    * ---------------------------------------------------------------- */
   useEffect(() => {
     if (!map) return;
-
-    const palette = getPalette(displayMode);
-
-    // The empty canvas has no layer to restyle, so it is painted directly.
-    setMapBackground(map, palette.background);
-
-    for (const entry of entriesRef.current) {
-      if (entry.attached) entry.def.restyle(entry.attached, palette);
-    }
-  }, [map, displayMode]);
+    setMapBackground(map, getPalette().background);
+  }, [map]);
 
   /* ---------------------------------------------------------------- *
    * 5. Projection preset
@@ -253,7 +260,17 @@ export function MapView(): JSX.Element {
   }, [map, followShip, vessel]);
 
   /* ---------------------------------------------------------------- *
-   * 7. Time-dependent layers and the stale fade
+   * 7. Station hover and selection
+   *
+   * Own overlay and its own listeners; it needs the map and nothing else.
+   * ---------------------------------------------------------------- */
+  useEffect(() => {
+    if (!map) return;
+    return setupStationInteraction(map);
+  }, [map]);
+
+  /* ---------------------------------------------------------------- *
+   * 8. Time-dependent layers and the stale fade
    * ---------------------------------------------------------------- */
   useEffect(() => {
     // Plain record rather than a `Map` — `Map` in this file is OpenLayers'.
@@ -286,13 +303,13 @@ export function MapView(): JSX.Element {
   }, []);
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-aurora-bg">
+    <div className="relative h-full w-full overflow-hidden bg-ocean-950">
       {state === 'ready' ? null : (
         <div className="absolute inset-0 flex items-center justify-center p-6">
           <p
             className={
               state === 'loading'
-                ? 'text-sm tracking-wide text-aurora-muted'
+                ? 'text-sm tracking-wide text-ocean-300'
                 : 'text-sm tracking-wide text-aurora-warn'
             }
             role="status"
@@ -305,6 +322,10 @@ export function MapView(): JSX.Element {
       {/* The container is always mounted so OpenLayers owns the element for the
           map's whole lifetime; the empty state is overlaid on top of it. */}
       <div ref={containerRef} className="h-full w-full" />
+
+      {/* Bottom-left of the map, clear of the scale bar. Renders nothing until
+          a station is pinned, and closes itself when the pin is cleared. */}
+      <StationInfoPanel className="absolute bottom-2 left-40 z-10" />
     </div>
   );
 }

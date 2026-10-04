@@ -27,8 +27,8 @@ TIME_NAMES = ("time", "valid_time")
 VARIABLES = ("uo", "vo", "thetao", "so", "zos")
 CHANNEL_LABELS = VARIABLES
 
-# GLORYS12V1 dataset id on Copernicus Marine.
-DATASET_ID = "global-reanalysis-phy-12-mo"
+# Global ocean physics analysis + forecast (CMEMS 2.x catalogue id).
+DATASET_ID = "cmems_mod_glo_phy_anfc_0.083deg_P1D-m"
 
 
 def _find_dim(dataset, names: tuple[str, ...]) -> str | None:
@@ -114,8 +114,8 @@ class CMEMSAdapter(DataSource):
                 maximum_latitude=north + 0.5,
                 minimum_depth=0.0,
                 maximum_depth=5.0,
-                start_date=datetime_utc(day),
-                end_date=datetime_utc(day, end=True),
+                start_datetime=datetime_utc(day),
+                end_datetime=datetime_utc(day, end=True),
                 variables=list(VARIABLES),
             )
         except TypeError as exc:  # pragma: no cover — client API drift

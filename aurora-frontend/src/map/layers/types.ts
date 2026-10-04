@@ -11,14 +11,14 @@
  *                       colour.
  *   `<name>Layer.ts`  — the assembled {@link AuroraLayer}.
  *
- * `restyle()` exists so switching display mode (Day/Dusk/Night) re-portrays the
- * layers **without refetching anything**. That separation is deliberate: a
- * palette change must not cause a network request.
+ * `restyle()` exists so a change of portrayal re-portrays the layers
+ * **without refetching anything**. That separation is deliberate: a palette
+ * change must not cause a network request.
  */
 import type BaseLayer from 'ol/layer/Base';
 import type Map from 'ol/Map';
 
-import type { DisplayMode, Palette } from '@/config/palettes';
+import type { Palette } from '@/config/palettes';
 import type { StalenessSource } from '@/config/constants';
 
 export type LayerCategory = 'base' | 'ice' | 'traffic' | 'route' | 'weather' | 'reference';
@@ -61,7 +61,7 @@ export interface AuroraLayer {
    */
   update(layer: AuroraOlLayer | null, state: unknown): AuroraOlLayer | null;
 
-  /** Re-apply portrayal for a new display mode. Must not fetch anything. */
+  /** Re-apply the current portrayal. Must not fetch anything. */
   restyle(layer: AuroraOlLayer, palette: Palette): void;
 
   /**
@@ -104,18 +104,4 @@ export const CATEGORY_LABELS: Record<LayerCategory, string> = {
   route: 'Route',
   traffic: 'Traffic',
   weather: 'Weather',
-};
-
-/**
- * Chrome variants per display mode, applied as a class on the app root.
- *
- * These are whole-console themes, not tokens: they set the root background and
- * foreground together so the chrome outside the panels visibly follows the
- * bridge-lighting setting. Panels keep their own aurora tokens, so only the
- * shell colour changes with them.
- */
-export const CHROME_CLASS: Record<DisplayMode, string> = {
-  day: 'bg-slate-100 text-slate-900',
-  dusk: 'bg-slate-800 text-slate-100',
-  night: 'bg-black text-red-100',
 };

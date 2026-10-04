@@ -6,8 +6,7 @@
  * legible over land, water and the SIC raster alike.
  *
  * Line and label are deliberately separate features rather than one style, so
- * a colour change in a display mode can move them independently — night mode
- * needs the labels dimmed further than the lines.
+ * their weight can move independently without rebuilding either.
  */
 import { Fill, Stroke, Style, Text } from 'ol/style';
 import type { FeatureLike } from 'ol/Feature';
@@ -18,6 +17,12 @@ import type { Palette } from '@/config/palettes';
 import { withAlpha } from '../shared';
 import { GRID_PROPS, type GridFeatureKind } from './gridSource';
 
+/** Line weight, as a fraction of the text colour — faint, but readable over
+ *  both white pack ice and the ocean background. */
+const LINE_ALPHA = 0.35;
+/** Label weight — the labels must read at a glance. */
+const LABEL_ALPHA = 0.8;
+
 function readKind(feature: FeatureLike): GridFeatureKind | null {
   const value = feature.get(GRID_PROPS.KIND);
   return value === 'line' || value === 'label' ? value : null;
@@ -26,7 +31,7 @@ function readKind(feature: FeatureLike): GridFeatureKind | null {
 export function getGridStyle(palette: Palette): StyleFunction {
   const line = new Style({
     stroke: new Stroke({
-      color: withAlpha(palette.text, palette.mode === 'night' ? 0.18 : 0.28),
+      color: withAlpha(palette.text, LINE_ALPHA),
       width: REFERENCE_WIDTH.graticule,
     }),
   });
@@ -34,7 +39,7 @@ export function getGridStyle(palette: Palette): StyleFunction {
   const label = new Style({
     text: new Text({
       font: '10px ui-monospace, SFMono-Regular, Menlo, monospace',
-      fill: new Fill({ color: withAlpha(palette.text, palette.mode === 'night' ? 0.55 : 0.8) }),
+      fill: new Fill({ color: withAlpha(palette.text, LABEL_ALPHA) }),
       stroke: new Stroke({ color: palette.textHalo, width: 3 }),
       overflow: true,
     }),

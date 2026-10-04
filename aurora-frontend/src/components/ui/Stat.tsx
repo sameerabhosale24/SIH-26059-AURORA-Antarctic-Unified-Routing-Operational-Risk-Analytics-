@@ -14,11 +14,11 @@ import type { ReactNode } from 'react';
 export type StatTone = 'default' | 'ok' | 'warn' | 'crit' | 'muted';
 
 const TONE_CLASS: Record<StatTone, string> = {
-  default: 'text-aurora-text',
+  default: 'text-ocean-100',
   ok: 'text-aurora-ok',
   warn: 'text-aurora-warn',
   crit: 'text-aurora-crit',
-  muted: 'text-aurora-muted',
+  muted: 'text-ocean-300',
 };
 
 export interface StatProps {
@@ -31,13 +31,13 @@ export interface StatProps {
 export function Stat({ label, value, unit, tone = 'default' }: StatProps): JSX.Element {
   return (
     <div className="flex items-baseline justify-between gap-3 py-0.5">
-      <span className="shrink-0 text-[11px] uppercase tracking-wide text-aurora-muted">
+      <span className="shrink-0 text-[11px] uppercase tracking-wide text-ocean-300">
         {label}
       </span>
 
       <span className={`min-w-0 truncate text-right text-sm ${TONE_CLASS[tone]}`}>
         {value}
-        {unit ? <span className="ml-1 text-[11px] text-aurora-muted">{unit}</span> : null}
+        {unit ? <span className="ml-1 text-[11px] text-ocean-300">{unit}</span> : null}
       </span>
     </div>
   );
@@ -49,5 +49,5 @@ export interface StatGroupProps {
 
 /** Vertical stack of {@link Stat} rows with a hairline between entries. */
 export function StatGroup({ children }: StatGroupProps): JSX.Element {
-  return <div className="divide-y divide-aurora-border/60">{children}</div>;
+  return <div className="divide-y divide-ocean-800/60">{children}</div>;
 }

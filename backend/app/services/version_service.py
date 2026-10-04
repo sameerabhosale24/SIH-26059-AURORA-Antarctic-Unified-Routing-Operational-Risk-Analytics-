@@ -88,9 +88,19 @@ def get(key: str, session: Session | None = None) -> DataVersion | None:
 
 
 def get_all(session: Session | None = None) -> dict[str, DataVersion]:
-    owned = session or _session()
-    rows = owned.execute(select(DataVersion).order_by(DataVersion.key)).scalars().all()
-    return {row.key: row for row in rows}
+    """Every ledger row, keyed by ``key``.
+
+    When no session is supplied this one owns the session it opens, so it
+    must close it — the alarm pass calls this once a minute and an unclosed
+    session here held one pooled connection open in a transaction every
+    minute until the pool was exhausted.
+    """
+    if session is not None:
+        rows = session.execute(select(DataVersion).order_by(DataVersion.key)).scalars().all()
+        return {row.key: row for row in rows}
+    with _session() as owned:
+        rows = owned.execute(select(DataVersion).order_by(DataVersion.key)).scalars().all()
+        return {row.key: row for row in rows}
 
 
 def last_fetch_for(key: str | None) -> str | None:

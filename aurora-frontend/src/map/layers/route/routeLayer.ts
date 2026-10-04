@@ -46,8 +46,8 @@ function build(state: RouteStore): RouteLayer | null {
 
   const layer = new VectorLayer<GeoFeature>({
     source: createRouteSource(features),
-    style: getRouteStyle(getPalette('day')),
-    zIndex: 60,
+    style: getRouteStyle(getPalette()),
+    zIndex: 65,
   });
 
   startTransition(layer, state.data?.id ?? null);

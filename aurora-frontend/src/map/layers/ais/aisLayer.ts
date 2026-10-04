@@ -25,8 +25,8 @@ function build(state: AisStore): AisLayer | null {
 
   return new VectorLayer<GeoFeature>({
     source: createAisSource(features),
-    style: getAisStyle(getPalette('day')),
-    zIndex: 85,
+    style: getAisStyle(getPalette()),
+    zIndex: 55,
   });
 }
 

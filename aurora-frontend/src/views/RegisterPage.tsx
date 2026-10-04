@@ -61,23 +61,23 @@ export function RegisterPage(): JSX.Element {
   const busy = isSubmitting || status === 'pending';
 
   return (
-    <div className="flex min-h-full items-center justify-center bg-aurora-bg px-4 py-10">
+    <div className="flex min-h-full items-center justify-center bg-ocean-950/80 px-4 py-10">
       <form
         onSubmit={(event) => {
           void onSubmit(event);
         }}
-        className="w-full max-w-sm rounded border border-aurora-border bg-aurora-panel p-6"
+        className="w-full max-w-sm rounded border border-ocean-700 bg-ocean-900 p-6"
         noValidate
       >
         <div className="mb-6 text-center">
-          <div className="text-lg font-semibold tracking-[0.3em] text-aurora-accent">AURORA</div>
-          <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-aurora-muted">
+          <div className="text-lg font-semibold tracking-[0.3em] text-ocean-400">AURORA</div>
+          <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-ocean-300">
             Create operator account
           </p>
         </div>
 
         <label className="mb-3 block" title="The address this operator account will sign in with">
-          <span className="mb-1 block text-[10px] uppercase tracking-[0.14em] text-aurora-muted">
+          <span className="mb-1 block text-[10px] uppercase tracking-[0.14em] text-ocean-300">
             Email
           </span>
           <input
@@ -85,7 +85,7 @@ export function RegisterPage(): JSX.Element {
             autoComplete="username"
             autoFocus
             placeholder="operator@aurora.demo"
-            className="w-full rounded-sm border border-aurora-border bg-aurora-bg px-2.5 py-2 text-sm text-aurora-text outline-none transition-colors focus:border-aurora-accent"
+            className="w-full rounded-sm border border-ocean-800 bg-ocean-950 px-2.5 py-2 text-sm text-ocean-100 outline-none transition-colors focus:border-ocean-400"
             aria-invalid={errors.email ? true : undefined}
             {...register('email')}
           />
@@ -95,14 +95,14 @@ export function RegisterPage(): JSX.Element {
         </label>
 
         <label className="mb-3 block" title="At least 8 characters. It is never shown back to you.">
-          <span className="mb-1 block text-[10px] uppercase tracking-[0.14em] text-aurora-muted">
+          <span className="mb-1 block text-[10px] uppercase tracking-[0.14em] text-ocean-300">
             Password
           </span>
           <input
             type="password"
             autoComplete="new-password"
             placeholder="••••••••"
-            className="w-full rounded-sm border border-aurora-border bg-aurora-bg px-2.5 py-2 text-sm text-aurora-text outline-none transition-colors focus:border-aurora-accent"
+            className="w-full rounded-sm border border-ocean-800 bg-ocean-950 px-2.5 py-2 text-sm text-ocean-100 outline-none transition-colors focus:border-ocean-400"
             aria-invalid={errors.password ? true : undefined}
             {...register('password')}
           />
@@ -114,14 +114,14 @@ export function RegisterPage(): JSX.Element {
         </label>
 
         <label className="mb-4 block" title="Type the same password again.">
-          <span className="mb-1 block text-[10px] uppercase tracking-[0.14em] text-aurora-muted">
+          <span className="mb-1 block text-[10px] uppercase tracking-[0.14em] text-ocean-300">
             Confirm password
           </span>
           <input
             type="password"
             autoComplete="new-password"
             placeholder="••••••••"
-            className="w-full rounded-sm border border-aurora-border bg-aurora-bg px-2.5 py-2 text-sm text-aurora-text outline-none transition-colors focus:border-aurora-accent"
+            className="w-full rounded-sm border border-ocean-800 bg-ocean-950 px-2.5 py-2 text-sm text-ocean-100 outline-none transition-colors focus:border-ocean-400"
             aria-invalid={errors.confirm ? true : undefined}
             {...register('confirm')}
           />
@@ -142,14 +142,14 @@ export function RegisterPage(): JSX.Element {
         <button
           type="submit"
           disabled={busy}
-          className="w-full rounded-sm bg-aurora-accent px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-aurora-bg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-sm bg-ocean-600 hover:bg-ocean-500 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
           {busy ? 'Creating account…' : 'Create account'}
         </button>
 
-        <p className="mt-4 text-center text-[10px] leading-relaxed text-aurora-muted">
+        <p className="mt-4 text-center text-[10px] leading-relaxed text-ocean-300">
           Already have an account?{' '}
-          <Link to="/login" className="text-aurora-accent underline-offset-2 hover:underline">
+          <Link to="/login" className="text-ocean-400 underline-offset-2 hover:underline">
             Sign in
           </Link>
         </p>

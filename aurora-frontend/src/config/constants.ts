@@ -83,7 +83,7 @@ export const AIS_LIFETIME = {
 export const ZOOM_THRESHOLDS = {
   /** Waypoint name + ETA labels. */
   WAYPOINT_LABEL: 5,
-  /** Station labels. */
+  /** Station labels — read as a view zoom level (`stationStyle.ts`). */
   STATION_LABEL: 4,
   /** AIS target names and CPA/TCPA. */
   AIS_LABEL: 6,
@@ -111,29 +111,23 @@ export const ROUTE_TRANSITION_MS = 500;
 export const ALARM_ZONE_OPACITY = 0.25;
 
 /**
- * CSS filter applied to the SIC raster per display mode.
+ * CSS filter applied to the SIC raster.
  *
- * The SIC PNG is a scientific product: its colormap must stay readable, so
- * night mode dims and desaturates rather than hue-rotating it. Landmass and
- * water are unaffected in absolute terms, which keeps the ice edge honest.
+ * The SIC PNG is a scientific product: its colormap must stay readable, so the
+ * raster is drawn unfiltered rather than hue-shifted with the chrome. Landmass
+ * and water are unaffected in absolute terms, which keeps the ice edge honest.
+ *
+ * AURORA renders a single presentation, so the filter is simply empty.
  */
-export const SIC_IMAGE_FILTER = {
-  day: 'none',
-  dusk: 'brightness(0.85)',
-  night: 'brightness(0.65) saturate(0.8)',
-} as const;
+export const SIC_IMAGE_FILTER = '';
 
-/** SIC uncertainty raster shares the SIC filter; it is a dimmer product. */
-export const UNCERTAINTY_IMAGE_FILTER = {
-  day: 'none',
-  dusk: 'brightness(0.85)',
-  night: 'brightness(0.65) saturate(0.8)',
-} as const;
+/** SIC uncertainty raster shares the SIC filter. */
+export const UNCERTAINTY_IMAGE_FILTER = '';
 
 /** Marker geometry, in pixels. */
 export const MARKER_SIZES = {
   iceberg: 5,
-  station: 4,
+  station: 6,
   waypoint: 5,
   alarmZone: 6,
 } as const;

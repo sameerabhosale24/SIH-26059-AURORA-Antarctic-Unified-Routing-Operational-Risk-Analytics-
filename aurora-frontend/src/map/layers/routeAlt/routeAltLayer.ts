@@ -28,8 +28,8 @@ function build(state: RouteStore): RouteAltLayer | null {
 
   return new VectorLayer<GeoFeature>({
     source: createAlternativeSource(features),
-    style: getAlternativeRouteStyle(getPalette('day')),
-    zIndex: 55,
+    style: getAlternativeRouteStyle(getPalette()),
+    zIndex: 60,
   });
 }
 

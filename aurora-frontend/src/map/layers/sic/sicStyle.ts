@@ -1,30 +1,29 @@
 /**
  * SIC raster "style".
  *
- * A raster has no OpenLayers style object, so the mode-dependent adjustment
- * lives in a canvas filter applied around the draw. OpenLayers dispatches
- * `prerender` immediately before the layer paints and `postrender`
- * immediately after, and both hand us the same context — so the filter can be
- * installed and removed without leaving a residue on the shared canvas.
+ * A raster has no OpenLayers style object, so any adjustment lives in a canvas
+ * filter applied around the draw. OpenLayers dispatches `prerender`
+ * immediately before the layer paints and `postrender` immediately after, and
+ * both hand us the same context — so the filter can be installed and removed
+ * without leaving a residue on the shared canvas.
  *
- * The filter string comes from `SIC_IMAGE_FILTER`, which is a palette
- * adjustment (brightness/contrast per bridge-lighting mode), not a recolouring
- * of the data: the PNG's class colours are the backend's, unchanged.
+ * The filter string comes from `SIC_IMAGE_FILTER`. AURORA renders one
+ * presentation, so it is currently empty: the PNG's class colours are the
+ * backend's, unchanged.
  */
 import type RenderEvent from 'ol/render/Event';
 
 import { SIC_IMAGE_FILTER, UNCERTAINTY_IMAGE_FILTER } from '@/config/constants';
-import type { DisplayMode } from '@/config/palettes';
 
 /** Layer property holding the current filter string. */
 export const SIC_FILTER_PROP = 'aurora-filter';
 
-export function sicFilterFor(mode: DisplayMode): string {
-  return SIC_IMAGE_FILTER[mode];
+export function sicFilterFor(): string {
+  return SIC_IMAGE_FILTER;
 }
 
-export function uncertaintyFilterFor(mode: DisplayMode): string {
-  return UNCERTAINTY_IMAGE_FILTER[mode];
+export function uncertaintyFilterFor(): string {
+  return UNCERTAINTY_IMAGE_FILTER;
 }
 
 function readContext(event: RenderEvent): CanvasRenderingContext2D | null {

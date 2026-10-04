@@ -1,8 +1,10 @@
-"""Electronic navigational charts — stubbed for PART 2.
+"""Electronic navigational charts — not a per-day fetch.
 
-ENC cells are static local files under ``data/enc/``, loaded once at
-startup and served from memory by the chart endpoint. There is no daily
-fetch and no grid: the display pipeline composites them as vector geometry.
+ENC cells are static local files under ``data/enc/``: no daily fetch and
+no grid, because the display pipeline composites them as vector geometry.
+``GET /api/enc/manifest`` already serves whatever is there; S-57 parsing
+into that manifest is not implemented, so an empty ``data/enc/`` currently
+produces an empty cell list.
 """
 
 from __future__ import annotations
@@ -29,8 +31,8 @@ class ENCAdapter(DataSource):
     async def fetch(self, day: date) -> Any:
         self._require_configured()
         raise NotImplementedError(
-            "ENC cells are loaded once at startup in PART 2; they are not "
-            "fetched per-day"
+            "ENC cells are static files served by GET /api/enc/manifest; "
+            "they are not fetched per-day"
         )
 
     def regrid(self, raw: Any) -> np.ndarray:

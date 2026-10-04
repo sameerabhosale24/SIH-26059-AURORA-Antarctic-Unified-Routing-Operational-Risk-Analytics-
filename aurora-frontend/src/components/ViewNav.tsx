@@ -51,19 +51,19 @@ export function ViewNav(): JSX.Element {
   const onFleet = location.pathname.startsWith('/ships') || location.pathname === '/login';
 
   return (
-    <nav className="flex shrink-0 items-center gap-1 border-b border-aurora-border bg-aurora-bg px-2">
+    <nav className="flex shrink-0 items-center gap-1 border-b border-ocean-800 bg-ocean-950 px-2">
       <NavLink
         to="/ships"
         className={`border-b-2 px-2.5 py-1.5 text-[11px] uppercase tracking-[0.14em] transition-colors ${
           onFleet
-            ? 'border-aurora-accent text-aurora-accent'
-            : 'border-transparent text-aurora-muted hover:text-aurora-text'
+            ? 'border-ocean-400 text-ocean-400'
+            : 'border-transparent text-ocean-300 hover:text-ocean-100'
         }`}
       >
         Fleet
       </NavLink>
 
-      <span className="mx-1 h-4 w-px bg-aurora-border" />
+      <span className="mx-1 h-4 w-px bg-ocean-800" />
 
       {ITEMS.map((item) => {
         const active = !onFleet && item.mode === mode;
@@ -74,7 +74,7 @@ export function ViewNav(): JSX.Element {
             <span
               key={item.mode}
               title="Open a vessel from the fleet first"
-              className="cursor-not-allowed border-b-2 border-transparent px-2.5 py-1.5 text-[11px] uppercase tracking-[0.14em] text-aurora-muted/40"
+              className="cursor-not-allowed border-b-2 border-transparent px-2.5 py-1.5 text-[11px] uppercase tracking-[0.14em] text-ocean-300/40"
             >
               {item.label}
             </span>
@@ -87,8 +87,8 @@ export function ViewNav(): JSX.Element {
             to={`${item.base}/${vesselId}`}
             className={`border-b-2 px-2.5 py-1.5 text-[11px] uppercase tracking-[0.14em] transition-colors ${
               active
-                ? 'border-aurora-accent text-aurora-accent'
-                : 'border-transparent text-aurora-muted hover:text-aurora-text'
+                ? 'border-ocean-400 text-ocean-400'
+                : 'border-transparent text-ocean-300 hover:text-ocean-100'
             }`}
           >
             {item.label}
@@ -96,7 +96,7 @@ export function ViewNav(): JSX.Element {
         );
       })}
 
-      <span className="ml-auto pr-1 text-[10px] text-aurora-muted/70">
+      <span className="ml-auto pr-1 text-[10px] text-ocean-300/70">
         {vesselId === null ? 'No vessel selected' : `Vessel #${vesselId}`}
       </span>
     </nav>

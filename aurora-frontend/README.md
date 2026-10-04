@@ -7,10 +7,12 @@ the map layers, panels, controls and views (Part 2), and authentication with
 fleet management (Part 3). There is **no backend anywhere in this workspace** —
 nothing here invents data to fill the gap.
 
-With no backend running, the app boots, renders the dark shell, shows an
-`API: down / WS: closed` badge, sends an unauthenticated visitor to `/login`,
-and logs a single `Failed to fetch ROI`. That is the correct first-launch
-state: every store is `null` and nothing is fabricated.
+With no backend running, the app boots and renders the public landing page
+at `/`; any console route sends an unauthenticated visitor to `/login`, and
+signing in on a backend-less machine lands on the console with an
+`API: down / WS: closed` badge plus a single `Failed to fetch ROI` in the
+log. That is the correct first-launch state: every store is `null` and
+nothing is fabricated.
 
 ---
 
@@ -362,7 +364,7 @@ rasters 40–41, routes 55–60, positions 70–85, alarms 90, own ship 95.
 | `RoutePanel` | `routeStore` | candidate table + `is_recommended` callout |
 | `ForecastTable` | `routeStore`, `icebergStore` | waypoint rows; ice = nearest iceberg ≤100 nm |
 | `DataFreshnessPanel` | `useStaleness` ×7 + every store's `error` | drawer, opened from the operational view |
-| `LegendPanel` | `uiStore.displayMode`, `LAYERS` | swatches read the live palette |
+| `LegendPanel` | `getPalette()`, `LAYERS` | swatches read the live palette |
 | `LayerManager` | `uiStore.layerVisibility` / `layerOpacity` | grouped by `CATEGORY_ORDER` |
 | `TimeSlider` | `sicStore.setHorizon` | D+1 / D+2 / D+3, matches a published frame only |
 
@@ -412,8 +414,9 @@ map- and panel-related is untouched; views gained a gate, not new internals.
 
 | Path | Guard | Page |
 | --- | --- | --- |
+| `/` | — (public) | `LandingPage` |
 | `/login` | — (redirects away if signed in) | `LoginPage` |
-| `/` | — | redirects to `/ships` |
+| `/register` | — (redirects away if signed in) | `RegisterPage` |
 | `/ships` | `RequireAuth` | `ShipsOverviewPage` |
 | `/ships/new` | `RequireAuth` | `AddShipPage` |
 | `/ships/:id` | `RequireAuth` | `ShipDetailPage` |
@@ -608,7 +611,8 @@ Recorded so they are not mistaken for oversights:
   under `EPSG:9802`, inverse returns `[35, -55]`.
 - **Headless-Chrome checks (CDP harness) pass with zero uncaught exceptions**
   against a stopped backend. Observed:
-  - `/` → `/login`; the login page carries no status bar and no view nav.
+  - `/` renders the public `LandingPage` with no status bar and no view nav;
+    **Explore Demo Console →** hands over to `/login`.
   - Submitting valid-shaped credentials with the backend down leaves the
     operator on `/login` with `Cannot reach the AURORA backend. Is it running?`.
   - With an injected session, `/ships` renders, shows the error banner plus
@@ -625,7 +629,14 @@ Recorded so they are not mistaken for oversights:
   actually scoped by `vessel_id`, and the SIC frame renderer from ISSUE 1.
 - **Map layers in-browser** remain partially unobservable for the same
   reason: `createMap()` never runs while `GET /api/roi` fails, so the
-  day/dusk/night chrome switch is verified on the shell but the canvas is not.
+  chart canvas itself is still unverified in a browser.
+- **Visual restructure (Day-only, ocean chrome, public landing).**
+  `npx tsc --noEmit` and `npm run build` both pass; a sweep confirms zero
+  `DisplayMode`/`getPalette(mode)` references, zero `slate-*` classes and
+  zero `aurora-{bg,panel,border,text,muted,accent}` tokens left in
+  `src/**`. Backend `pytest tests -q` — 79 passed, including a manifest
+  check that the SIC product is three entries named `{horizon}_{field}.png`
+  with no dusk/night file on disk.
 
 ## Licence
 

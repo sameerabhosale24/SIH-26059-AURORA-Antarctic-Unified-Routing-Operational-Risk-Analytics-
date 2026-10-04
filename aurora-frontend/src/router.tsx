@@ -1,7 +1,9 @@
 /**
  * Route table.
  *
- * Two guard layers wrap everything that is not the sign-in page:
+ * Three routes are public — `/` (the landing page), `/login` and `/register`
+ * — because a stranger has no session to protect and nothing to read. Every
+ * console route sits behind two guard layers:
  *
  *   RequireAuth  — is anyone signed in?
  *   RequireVessel — does the URL name a vessel?
@@ -16,6 +18,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AuthBridge, RequireAuth, RequireVessel } from '@/components/guards';
 import { AddShipPage } from '@/views/AddShipPage';
 import { AnalysisView } from '@/views/AnalysisView';
+import { LandingPage } from '@/views/LandingPage';
 import { LoginPage } from '@/views/LoginPage';
 import { OperationalView } from '@/views/OperationalView';
 import { PlanningView } from '@/views/PlanningView';
@@ -31,11 +34,10 @@ export function AppRoutes(): JSX.Element {
       <AuthBridge />
 
       <Routes>
+        {/* Public: no session exists yet, so there is nothing to guard. */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-
-        {/* Root resolves to the fleet; RequireAuth then decides login vs fleet. */}
-        <Route path="/" element={<Navigate to="/ships" replace />} />
 
         <Route element={<RequireAuth />}>
           <Route path="/ships" element={<ShipsOverviewPage />} />

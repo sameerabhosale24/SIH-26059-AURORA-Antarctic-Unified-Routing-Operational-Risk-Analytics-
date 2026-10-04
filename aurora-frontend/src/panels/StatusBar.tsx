@@ -1,9 +1,10 @@
 /**
  * Status bar — the always-visible strip along the top of the console.
  *
- * Carries, left to right: identity, own-ship position, the UTC clock, and one
- * health dot per data source. Every dot is derived from `useStaleness`, so the
- * strip and the freshness drawer can never disagree about a source.
+ * Carries, left to right: identity, own-ship position, the UTC clock, the
+ * issue date of the sea-ice forecast on the map, and one health dot per data
+ * source. Every dot is derived from `useStaleness`, so the strip and the
+ * freshness drawer can never disagree about a source.
  *
  * `NO GPS` is shown once the own-ship stream is older than
  * `STALENESS_THRESHOLDS.GPS` — the single most important fact on the bar,
@@ -13,10 +14,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { STALENESS_THRESHOLDS, type StalenessSource } from '@/config/constants';
-import { DISPLAY_MODES } from '@/config/palettes';
 import { useDataStore, aggregateWsStatus } from '@/stores/dataStore';
 import { useShipsStore } from '@/stores/shipsStore';
-import { useUiStore } from '@/stores/uiStore';
+import { useSicStore } from '@/stores/sicStore';
 import { useUserStore } from '@/stores/userStore';
 import { useVesselStore } from '@/stores/vesselStore';
 import { useStaleness } from '@/hooks/useStaleness';
@@ -78,39 +78,6 @@ function useUtcClock(): string {
 }
 
 /**
- * Day / Dusk / Night.
- *
- * In the status bar rather than only in Settings because it is a *viewing*
- * choice — an operator changes it when the bridge lighting changes, which is
- * not a settings visit — and because the effect it has on the chart has to be
- * visible at the same moment as the control.
- */
-function DisplayModeSwitch(): JSX.Element {
-  const displayMode = useUiStore((state) => state.displayMode);
-  const setDisplayMode = useUiStore((state) => state.setDisplayMode);
-
-  return (
-    <div className="flex shrink-0 overflow-hidden rounded-sm border border-aurora-border">
-      {DISPLAY_MODES.map((mode) => (
-        <button
-          key={mode}
-          type="button"
-          aria-pressed={mode === displayMode}
-          onClick={() => setDisplayMode(mode)}
-          className={`px-1.5 py-0.5 text-[10px] uppercase tracking-[0.12em] transition-colors ${
-            mode === displayMode
-              ? 'bg-aurora-accent/15 text-aurora-accent'
-              : 'text-aurora-muted hover:text-aurora-text'
-          }`}
-        >
-          {mode}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-/**
  * Signed-in operator and the way out.
  *
  * Sign-out is deliberate and local: the fleet cache is dropped in the same
@@ -134,7 +101,7 @@ function SessionControl(): JSX.Element | null {
 
   return (
     <div className="flex shrink-0 items-center gap-2">
-      <span className="hidden max-w-[12rem] truncate text-[11px] text-aurora-muted lg:inline">
+      <span className="hidden max-w-[12rem] truncate text-[11px] text-ocean-300 lg:inline">
         {user.email}
       </span>
 
@@ -144,7 +111,7 @@ function SessionControl(): JSX.Element | null {
         onClick={() => {
           void handleSignOut();
         }}
-        className="rounded-sm border border-aurora-border px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-aurora-muted transition-colors hover:border-aurora-crit/50 hover:text-aurora-crit"
+        className="rounded-sm border border-ocean-600 px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-ocean-300 transition-colors hover:border-aurora-crit/50 hover:bg-aurora-crit/10 hover:text-aurora-crit"
       >
         Sign out
       </button>
@@ -154,6 +121,7 @@ function SessionControl(): JSX.Element | null {
 
 export function StatusBar(): JSX.Element {
   const clock = useUtcClock();
+  const forecastDate = useSicStore((state) => state.currentDate);
 
   const vessel = useVesselStore((state) => state.data);
   const vesselUpdated = useVesselStore((state) => state.lastUpdated);
@@ -190,31 +158,29 @@ export function StatusBar(): JSX.Element {
   const heading = vessel ? fmtBearing(vessel.heading) : EM_DASH;
 
   return (
-    <header className="h-10 shrink-0 border-b border-aurora-border bg-aurora-panel">
+    <header className="h-10 shrink-0 border-b border-ocean-800 bg-ocean-900">
       <div className="flex h-full items-center gap-3 overflow-x-auto px-3">
-        <span className="shrink-0 text-sm font-semibold tracking-[0.3em] text-aurora-accent">
+        <span className="shrink-0 text-sm font-semibold tracking-[0.3em] text-ocean-400">
           AURORA
         </span>
 
         <span
-          className="hidden shrink-0 text-xs text-aurora-text sm:inline"
+          className="hidden shrink-0 text-xs text-ocean-100 sm:inline"
           title={blueprint ? `IMO ${blueprint.imo}` : undefined}
         >
           {blueprint ? blueprint.name : null}
-          {blueprint && vessel ? <span className="text-aurora-muted"> · {vessel.vessel_id}</span> : null}
+          {blueprint && vessel ? <span className="text-ocean-300"> · {vessel.vessel_id}</span> : null}
         </span>
 
-        <span className="shrink-0 font-mono text-xs text-aurora-text">{position}</span>
+        <span className="shrink-0 font-mono text-xs text-ocean-100">{position}</span>
 
-        <span className="hidden shrink-0 font-mono text-xs text-aurora-muted md:inline">
+        <span className="hidden shrink-0 font-mono text-xs text-ocean-300 md:inline">
           HDG {heading}
         </span>
 
         {noGps ? <Badge tone="crit">No GPS</Badge> : null}
 
         <div className="ml-auto flex shrink-0 items-center gap-3">
-          <DisplayModeSwitch />
-
           <div className="flex items-center gap-2" title="Data source health">
             {SOURCES.map((source) => (
               <SourceDot key={source.key} label={source.label} state={states[source.key]} />
@@ -229,7 +195,16 @@ export function StatusBar(): JSX.Element {
             WS {wsStatus}
           </Badge>
 
-          <span className="font-mono text-xs text-aurora-text">{clock}Z</span>
+          <span className="font-mono text-xs text-ocean-100">{clock}Z</span>
+
+          {forecastDate ? (
+            <span
+              className="shrink-0 font-mono text-xs text-ocean-300"
+              title="Issue date of the sea-ice forecast drawn on the map"
+            >
+              FORECAST: {forecastDate}
+            </span>
+          ) : null}
 
           <SessionControl />
         </div>

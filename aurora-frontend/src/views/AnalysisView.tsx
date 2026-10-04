@@ -194,17 +194,17 @@ function AnalysisContent(): JSX.Element {
         <FuelChart points={points} />
 
         <div className="mt-2 flex items-baseline justify-between text-[11px]">
-          <span className="text-aurora-muted">Latest</span>
-          <span className="font-mono text-aurora-text">
+          <span className="text-ocean-300">Latest</span>
+          <span className="font-mono text-ocean-100">
             {latest?.fuel === null || latest?.fuel === undefined
               ? EM_DASH
               : `${latest.fuel.toFixed(1)} t`}
           </span>
 
-          <span className="text-aurora-muted">Δ previous run</span>
+          <span className="text-ocean-300">Δ previous run</span>
           <span
             className={`font-mono ${
-              deltaFuel === null ? 'text-aurora-muted' : deltaFuel > 0 ? 'text-aurora-warn' : 'text-aurora-ok'
+              deltaFuel === null ? 'text-ocean-300' : deltaFuel > 0 ? 'text-aurora-warn' : 'text-aurora-ok'
             }`}
           >
             {deltaFuel === null
@@ -218,17 +218,17 @@ function AnalysisContent(): JSX.Element {
         <RiskChart points={points} />
 
         <div className="mt-2 flex items-baseline justify-between text-[11px]">
-          <span className="text-aurora-muted">Latest</span>
-          <span className="font-mono text-aurora-text">
+          <span className="text-ocean-300">Latest</span>
+          <span className="font-mono text-ocean-100">
             {latest?.risk === null || latest?.risk === undefined
               ? EM_DASH
               : latest.risk.toFixed(0)}
           </span>
 
-          <span className="text-aurora-muted">Δ previous run</span>
+          <span className="text-ocean-300">Δ previous run</span>
           <span
             className={`font-mono ${
-              deltaRisk === null ? 'text-aurora-muted' : deltaRisk > 0 ? 'text-aurora-warn' : 'text-aurora-ok'
+              deltaRisk === null ? 'text-ocean-300' : deltaRisk > 0 ? 'text-aurora-warn' : 'text-aurora-ok'
             }`}
           >
             {deltaRisk === null
@@ -239,7 +239,7 @@ function AnalysisContent(): JSX.Element {
       </Panel>
 
       <Panel title="Not charted" className="lg:col-span-2">
-        <p className="text-[11px] leading-relaxed text-aurora-muted">
+        <p className="text-[11px] leading-relaxed text-ocean-300">
           Sea-ice concentration and under-keel clearance have no time series in
           the API — SIC is published as discrete D+1/D+2/D+3 frames and UKC as a
           single latest reading. Charting either would mean interpolating samples

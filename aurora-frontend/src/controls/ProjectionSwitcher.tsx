@@ -24,7 +24,7 @@ export function ProjectionSwitcher(): JSX.Element {
   const setProjection = useUiStore((state) => state.setProjection);
 
   return (
-    <div className="flex overflow-hidden rounded-sm border border-aurora-border">
+    <div className="flex overflow-hidden rounded-sm border border-ocean-800">
       {PRESETS.map((preset) => {
         const active = preset.id === projection;
 
@@ -37,8 +37,8 @@ export function ProjectionSwitcher(): JSX.Element {
             onClick={() => setProjection(preset.id)}
             className={`px-2 py-1 text-[10px] uppercase tracking-[0.12em] transition-colors ${
               active
-                ? 'bg-aurora-accent/15 text-aurora-accent'
-                : 'text-aurora-muted hover:text-aurora-text'
+                ? 'bg-ocean-400/15 text-ocean-400'
+                : 'text-ocean-300 hover:text-ocean-100'
             }`}
           >
             {preset.label}

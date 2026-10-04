@@ -22,8 +22,8 @@ function build(state: IcebergStore): IcebergLayer | null {
 
   return new VectorLayer<GeoFeature>({
     source: createIcebergSource(features),
-    style: getIcebergStyle(getPalette('day')),
-    zIndex: 80,
+    style: getIcebergStyle(getPalette()),
+    zIndex: 45,
   });
 }
 

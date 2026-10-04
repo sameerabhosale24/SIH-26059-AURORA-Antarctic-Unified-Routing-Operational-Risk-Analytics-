@@ -72,8 +72,8 @@ export function ConningPanel({ className = '' }: { className?: string }): JSX.El
             <Stat label="Ship wind dir" value={fmtBearing(vessel.wind_dir)} />
           </StatGroup>
 
-          <div className="mt-3 border-t border-aurora-border/60 pt-2">
-            <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-aurora-muted">
+          <div className="mt-3 border-t border-ocean-800/60 pt-2">
+            <p className="mb-1 text-[10px] uppercase tracking-[0.2em] text-ocean-300">
               Metocean
             </p>
 

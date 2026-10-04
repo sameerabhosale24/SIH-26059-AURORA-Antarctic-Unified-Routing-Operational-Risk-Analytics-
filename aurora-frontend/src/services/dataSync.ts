@@ -28,6 +28,7 @@ import { onVersionChange } from '@/services/versionPoller';
 import { preloadCoastline } from '@/map/layers/coastline/coastlineSource';
 import { useAisStore } from '@/stores/aisStore';
 import { useAlarmStore } from '@/stores/alarmStore';
+import { useDataStore } from '@/stores/dataStore';
 import { useEncStore } from '@/stores/encStore';
 import { useIcebergStore } from '@/stores/icebergStore';
 import { useRouteStore } from '@/stores/routeStore';
@@ -226,7 +227,13 @@ export function initDataSync(): () => void {
 
   let booted = false;
 
-  const offVersion = onVersionChange((_version, changed) => {
+  const offVersion = onVersionChange((version, changed) => {
+    // The version poll is the app's only proof of life from the REST API, so
+    // it is also what clears the "API down" badge the store starts with. It
+    // has to run before the first-load guard below: that guard skips the
+    // refetch wave, not the status.
+    useDataStore.getState().setVersions(version);
+
     // The first poll has no previous snapshot, so it reports every key as
     // changed. Those stores were just loaded above; re-deriving that as five
     // toasts would greet the operator with noise instead of data.

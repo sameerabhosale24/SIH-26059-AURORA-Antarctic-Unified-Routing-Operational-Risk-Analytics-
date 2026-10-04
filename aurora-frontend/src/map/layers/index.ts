@@ -7,28 +7,46 @@
  *
  * ## Order and z-index
  *
- * Both are specified deliberately and must agree.
+ * Two different orders, deliberately, and they need not agree.
  *
- * - **Array order** is bottom-to-top display order in the layer manager, and
- *   is grouped by {@link CATEGORY_ORDER}.
+ * - **Array order** is the listing order in the layer manager, grouped by
+ *   {@link CATEGORY_ORDER}. It decides where a layer appears in the panel,
+ *   nothing else.
  * - **`zIndex`** is what OpenLayers actually paints by, set on each layer
  *   individually so a layer's stacking survives the manager being collapsed,
- *   filtered, or reordered in the UI.
+ *   filtered, or reordered in the UI — and so a reference layer (the
+ *   graticule) can sit above a data layer it is listed below.
  *
- * The invariant to preserve when adding a layer: its `zIndex` must place it
- * where its position in this array says it is.
+ * The invariant to preserve when adding a layer: give it a `zIndex` from the
+ * table below, or extend the table — never let paint order fall back to
+ * insertion order.
  *
  * ## Stacking rationale
  *
- * | band       | zIndex | contents |
- * |------------|--------|----------|
- * | chart      | 10–20  | ENC, then the coastline outline |
- * | reference  | 30     | graticule |
- * | rasters    | 40–41  | SIC, then its uncertainty band |
- * | routes     | 55–60  | alternatives, then the recommended route |
- * | positions  | 70–85  | stations, drift cones, icebergs, AIS |
- * | alarms     | 90     | alarm markers and zones |
- * | own ship   | 95     | the vessel — never covered |
+ * `zIndex` is assigned per layer id, in one table, and does not depend on
+ * where a layer sits in this array:
+ *
+ * | zIndex | layer |
+ * |--------|-------|
+ * | 10 | `coastline` |
+ * | 20 | `enc` |
+ * | 30 | `sic` |
+ * | 35 | `sicUncertainty` |
+ * | 40 | `icebergDrift` |
+ * | 45 | `iceberg` |
+ * | 50 | `current` — reserved; no currents layer exists yet |
+ * | 55 | `ais` |
+ * | 60 | `routeAlt` |
+ * | 65 | `route` |
+ * | 70 | `ownShip` |
+ * | 75 | `alarmZone` |
+ * | 80 | `station` |
+ * | 85 | `corridor` |
+ * | 90 | `grid` (Graticule) — always on top |
+ *
+ * The graticule is the one deliberate outlier: it is a navigation reference,
+ * so like a compass rose on a paper chart it has to stay visible over every
+ * data layer, the SIC raster included.
  */
 import type { UiStoreState } from '@/stores/uiStore';
 
@@ -38,6 +56,7 @@ import { CATEGORY_ORDER } from './types';
 import { encLayer } from './enc/encLayer';
 import { coastline } from './coastline/coastlineLayer';
 import { grid } from './grid/gridLayer';
+import { corridor } from './corridor/corridorLayer';
 import { station } from './station/stationLayer';
 import { sic } from './sic/sicLayer';
 import { sicUncertainty } from './sicUncertainty/sicUncertaintyLayer';
@@ -63,6 +82,7 @@ export const LAYERS: readonly AuroraLayer[] = [
 
   // reference
   grid,
+  corridor,
   station,
 
   // ice

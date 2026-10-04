@@ -12,7 +12,7 @@ import { useEffect } from 'react';
 import { TOAST_TTL_MS, useToastStore, type Toast, type ToastTone } from '@/stores/toastStore';
 
 const TONE_CLASS: Record<ToastTone, string> = {
-  info: 'border-aurora-accent/40 text-aurora-accent',
+  info: 'border-ocean-400/40 text-ocean-400',
   success: 'border-aurora-ok/40 text-aurora-ok',
   warn: 'border-aurora-warn/50 text-aurora-warn',
   error: 'border-aurora-crit/50 text-aurora-crit',
@@ -28,21 +28,21 @@ function ToastRow({ toast }: { toast: Toast }): JSX.Element {
 
   return (
     <div
-      className={`pointer-events-auto min-w-[16rem] max-w-sm rounded border bg-aurora-panel px-3 py-2 shadow-lg shadow-black/40 ${TONE_CLASS[toast.tone]}`}
+      className={`pointer-events-auto min-w-[16rem] max-w-sm rounded border bg-ocean-900 px-3 py-2 shadow-lg shadow-black/40 ${TONE_CLASS[toast.tone]}`}
       role="status"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-medium tracking-wide text-aurora-text">{toast.message}</p>
+          <p className="text-xs font-medium tracking-wide text-ocean-100">{toast.message}</p>
           {toast.detail ? (
-            <p className="mt-0.5 truncate text-[11px] text-aurora-muted">{toast.detail}</p>
+            <p className="mt-0.5 truncate text-[11px] text-ocean-300">{toast.detail}</p>
           ) : null}
         </div>
 
         <button
           type="button"
           onClick={() => dismiss(toast.id)}
-          className="shrink-0 text-xs text-aurora-muted transition-colors hover:text-aurora-text"
+          className="shrink-0 text-xs text-ocean-300 transition-colors hover:text-ocean-100"
           aria-label="Dismiss notification"
         >
           ×

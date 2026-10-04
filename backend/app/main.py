@@ -1,8 +1,9 @@
 """AURORA backend application.
 
-Auth, vessel management, the data-infrastructure jobs, and the single
-health endpoint that exposes them. REST resources for routes, alarms and
-WebSocket relays arrive in PART 2 and mount on the same app.
+Auth and vessel management, the REST resources the map reads (reference
+data, versions, SIC frames, telemetry, routes, icebergs, weather, alarms),
+the data-infrastructure jobs behind them, five WebSocket channels, the
+real-time relays, and the single health endpoint that exposes all of it.
 """
 
 import asyncio
@@ -15,7 +16,19 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
-from app.api import auth, vessels
+from app import ws
+from app.api import (
+    alarms,
+    auth,
+    icebergs,
+    reference,
+    route,
+    sic,
+    telemetry,
+    vessels,
+    version,
+    weather,
+)
 from app.config import get_settings
 from app.db.session import engine
 from app.redis.client import get_redis_client
@@ -91,7 +104,23 @@ async def lifespan(app: FastAPI):
 
     start_scheduler()
 
+    # The three continuous streams. Each guards its own configuration and
+    # returns immediately when the deployment has no endpoint to connect
+    # to, so an unconfigured backend starts nothing and logs why.
+    from app.services.relays import ais_relay, gps_relay
+    from app.services.weather_poller import run_weather_poller
+
+    app.state.streams = [
+        asyncio.create_task(gps_relay.run_gps_relay(), name="gps_relay"),
+        asyncio.create_task(ais_relay.run_ais_relay(), name="ais_relay"),
+        asyncio.create_task(run_weather_poller(), name="weather_poller"),
+    ]
+
     yield
+
+    for task in app.state.streams:
+        task.cancel()
+    await asyncio.gather(*app.state.streams, return_exceptions=True)
 
     stop_scheduler()
     await engine.dispose()
@@ -115,6 +144,23 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(vessels.router)
 
+# Reference data first: the map cannot draw anything without the ROI, the
+# coastline, the stations or the chart manifest, and none of it depends on
+# a sensor or on who is asking.
+app.include_router(reference.router)
+app.include_router(version.router)
+app.include_router(sic.router)
+app.include_router(icebergs.router)
+
+# Operational data. Every one of these scopes to the caller's own vessel.
+app.include_router(telemetry.router)
+app.include_router(route.router)
+app.include_router(weather.router)
+app.include_router(alarms.router)
+
+# The five push channels. Unauthenticated by design — see app.ws.
+ws.register(app)
+
 
 @app.get("/api/health", tags=["health"])
 async def health() -> dict:
@@ -131,6 +177,7 @@ async def health() -> dict:
         app.state.forecaster_ok = forecaster_ok
 
     sources = await asyncio.to_thread(health_snapshot)
+    disk = await asyncio.to_thread(_report_disk_usage)
     last_run = await read_sic_run()
 
     return {
@@ -139,9 +186,21 @@ async def health() -> dict:
         "redis": redis_ok,
         "forecaster": forecaster_ok,
         "sources": sources,
+        "disk": disk,
         "scheduler": {
             "running": scheduler_running(),
             "next_sic_run": next_sic_run(),
             "last_sic_run": last_run,
         },
     }
+
+
+def _report_disk_usage() -> dict:
+    """Storage report, isolated so a filesystem error cannot fail /api/health."""
+    from app.services.storage_manager import report_disk_usage
+
+    try:
+        return report_disk_usage()
+    except Exception:  # noqa: BLE001 — health reports, it never raises
+        logger.exception("disk usage report failed")
+        return {}

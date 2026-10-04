@@ -26,8 +26,8 @@ function lastUsed(vessel: Vessel): string {
 function stat(label: string, value: string | null | undefined): JSX.Element {
   return (
     <div className="min-w-0">
-      <dt className="text-[9px] uppercase tracking-[0.14em] text-aurora-muted">{label}</dt>
-      <dd className="truncate font-mono text-[11px] text-aurora-text">{value || EM_DASH}</dd>
+      <dt className="text-[9px] uppercase tracking-[0.14em] text-ocean-300">{label}</dt>
+      <dd className="truncate font-mono text-[11px] text-ocean-100">{value || EM_DASH}</dd>
     </div>
   );
 }
@@ -42,13 +42,13 @@ function ShipCard({
   onDelete: (vessel: Vessel) => void;
 }): JSX.Element {
   return (
-    <article className="flex flex-col rounded border border-aurora-border bg-aurora-panel">
-      <header className="flex items-start justify-between gap-2 border-b border-aurora-border px-3 py-2">
+    <article className="flex flex-col rounded border border-ocean-800 bg-ocean-900">
+      <header className="flex items-start justify-between gap-2 border-b border-ocean-800 px-3 py-2">
         <div className="min-w-0">
-          <h3 className="truncate text-sm font-semibold text-aurora-text" title={vessel.name}>
+          <h3 className="truncate text-sm font-semibold text-ocean-100" title={vessel.name}>
             {vessel.name}
           </h3>
-          <p className="truncate text-[10px] uppercase tracking-[0.14em] text-aurora-muted">
+          <p className="truncate text-[10px] uppercase tracking-[0.14em] text-ocean-300">
             {vessel.vessel_type} · {vessel.imo}
           </p>
         </div>
@@ -68,17 +68,17 @@ function ShipCard({
         {stat('Last used', lastUsed(vessel))}
       </dl>
 
-      <footer className="mt-auto flex items-center gap-2 border-t border-aurora-border px-3 py-2">
+      <footer className="mt-auto flex items-center gap-2 border-t border-ocean-800 px-3 py-2">
         <Link
           to={`/map/${vessel.id}`}
-          className="rounded-sm bg-aurora-accent/15 px-2 py-1 text-[11px] font-medium uppercase tracking-[0.12em] text-aurora-accent transition-colors hover:bg-aurora-accent/25"
+          className="rounded-sm bg-ocean-400/15 px-2 py-1 text-[11px] font-medium uppercase tracking-[0.12em] text-ocean-400 transition-colors hover:bg-ocean-400/25"
         >
           Open
         </Link>
 
         <Link
           to={`/ships/${vessel.id}`}
-          className="rounded-sm border border-aurora-border px-2 py-1 text-[11px] uppercase tracking-[0.12em] text-aurora-muted transition-colors hover:text-aurora-text"
+          className="rounded-sm border border-ocean-600 px-2 py-1 text-[11px] uppercase tracking-[0.12em] text-ocean-300 transition-colors hover:bg-ocean-800 hover:text-ocean-100"
         >
           Details
         </Link>
@@ -86,7 +86,7 @@ function ShipCard({
         <button
           type="button"
           onClick={() => onEdit(vessel)}
-          className="rounded-sm border border-aurora-border px-2 py-1 text-[11px] uppercase tracking-[0.12em] text-aurora-muted transition-colors hover:text-aurora-text"
+          className="rounded-sm border border-ocean-600 px-2 py-1 text-[11px] uppercase tracking-[0.12em] text-ocean-300 transition-colors hover:bg-ocean-800 hover:text-ocean-100"
         >
           Edit
         </button>
@@ -121,12 +121,12 @@ function ConfirmDelete({
       aria-modal="true"
       aria-labelledby="confirm-delete-title"
     >
-      <div className="w-full max-w-sm rounded border border-aurora-border bg-aurora-panel p-4">
-        <h2 id="confirm-delete-title" className="text-sm font-semibold text-aurora-text">
+      <div className="w-full max-w-sm rounded border border-ocean-800 bg-ocean-900 p-4">
+        <h2 id="confirm-delete-title" className="text-sm font-semibold text-ocean-100">
           Delete {vessel.name}?
         </h2>
 
-        <p className="mt-2 text-[11px] leading-relaxed text-aurora-muted">
+        <p className="mt-2 text-[11px] leading-relaxed text-ocean-300">
           This removes the vessel and all of its stored limits from the fleet. Routes already
           computed for it are kept as history. This cannot be undone.
         </p>
@@ -136,7 +136,7 @@ function ConfirmDelete({
             type="button"
             onClick={onCancel}
             disabled={busy}
-            className="rounded-sm border border-aurora-border px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-aurora-muted transition-colors hover:text-aurora-text disabled:opacity-50"
+            className="rounded-sm border border-ocean-600 px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-ocean-300 transition-colors hover:bg-ocean-800 hover:text-ocean-100 disabled:opacity-50"
           >
             Cancel
           </button>
@@ -145,7 +145,7 @@ function ConfirmDelete({
             type="button"
             onClick={onConfirm}
             disabled={busy}
-            className="rounded-sm bg-aurora-crit px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="rounded-sm bg-aurora-crit px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white transition-colors disabled:opacity-50"
           >
             {busy ? 'Deleting…' : 'Delete vessel'}
           </button>
@@ -213,8 +213,8 @@ export function ShipsOverviewPage(): JSX.Element {
     <div className="mx-auto flex h-full min-h-0 w-full max-w-6xl flex-col gap-3 p-3">
       <header className="flex flex-wrap items-center gap-3">
         <div>
-          <h1 className="text-base font-semibold tracking-[0.14em] text-aurora-text">Vessels</h1>
-          <p className="text-[11px] text-aurora-muted">
+          <h1 className="text-base font-semibold tracking-[0.14em] text-ocean-100">Vessels</h1>
+          <p className="text-[11px] text-ocean-300">
             {list.length === 1 ? '1 vessel' : `${list.length} vessels`}
             {loadedAt ? ` · refreshed ${fmtDateTime(new Date(loadedAt).toISOString())}` : ''}
           </p>
@@ -228,13 +228,13 @@ export function ShipsOverviewPage(): JSX.Element {
             placeholder="Search name, IMO, MMSI…"
             aria-label="Search vessels"
             title="Filter the fleet by name, IMO number, MMSI, call sign or flag"
-            className="w-44 rounded-sm border border-aurora-border bg-aurora-panel px-2.5 py-1.5 text-xs text-aurora-text outline-none transition-colors focus:border-aurora-accent sm:w-64"
+            className="w-44 rounded-sm border border-ocean-800 bg-ocean-900 px-2.5 py-1.5 text-xs text-ocean-100 outline-none transition-colors focus:border-ocean-400 sm:w-64"
           />
 
           <button
             type="button"
             onClick={() => navigate('/ships/new')}
-            className="rounded-sm bg-aurora-accent px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-aurora-bg transition-opacity hover:opacity-90"
+            className="rounded-sm bg-ocean-600 hover:bg-ocean-500 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white "
           >
             Add vessel
           </button>
@@ -265,7 +265,7 @@ export function ShipsOverviewPage(): JSX.Element {
             {[0, 1, 2].map((index) => (
               <div
                 key={index}
-                className="h-40 animate-pulse rounded border border-aurora-border bg-aurora-panel/60"
+                className="h-40 animate-pulse rounded border border-ocean-800 bg-ocean-900/60"
               />
             ))}
           </div>

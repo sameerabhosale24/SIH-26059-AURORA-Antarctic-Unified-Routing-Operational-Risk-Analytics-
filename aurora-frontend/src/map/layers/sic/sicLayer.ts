@@ -9,7 +9,6 @@ import ImageLayer from 'ol/layer/Image';
 import type ImageStatic from 'ol/source/ImageStatic';
 
 import { useSicStore, type SicStore } from '@/stores/sicStore';
-import { useUiStore } from '@/stores/uiStore';
 import type { SicFrameMeta } from '@/types/sic';
 import type { AuroraLayer, AuroraOlLayer } from '../types';
 import {
@@ -38,12 +37,14 @@ function build(state: SicStore): SicLayer | null {
 
   layer.set(SIC_FRAME_PROP, frame);
   layer.set(SIC_PROJ_PROP, projectionCode);
-  layer.set(SIC_FILTER_PROP, sicFilterFor(useUiStore.getState().displayMode));
+  layer.set(SIC_FILTER_PROP, sicFilterFor());
   attachImageFilter(layer);
 
-  // Above the graticule, below every hazard overlay: sea ice is the chart's
-  // dominant hazard, but a target must never be hidden beneath it.
-  layer.setZIndex(40);
+  // Above the ENC and the coastline, below every hazard overlay: sea ice is
+  // the chart's dominant hazard, but a target must never be hidden beneath
+  // it. The graticule sits higher still — a reading aid has to be readable
+  // over whatever it is measuring.
+  layer.setZIndex(30);
 
   return layer;
 }
@@ -85,8 +86,8 @@ export const sic: AuroraLayer = {
     return layer;
   },
 
-  restyle: (layer, palette) => {
-    if (isSicLayer(layer)) layer.set(SIC_FILTER_PROP, sicFilterFor(palette.mode));
+  restyle: (layer) => {
+    if (isSicLayer(layer)) layer.set(SIC_FILTER_PROP, sicFilterFor());
   },
 
   subscribe: (onChange) => useSicStore.subscribe((state) => onChange(state)),

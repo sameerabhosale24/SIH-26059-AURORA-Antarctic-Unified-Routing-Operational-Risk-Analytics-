@@ -22,8 +22,8 @@ function build(state: AlarmStore): AlarmLayer | null {
 
   return new VectorLayer<GeoFeature>({
     source: createAlarmSource(features),
-    style: getAlarmZoneStyle(getPalette('day')),
-    zIndex: 90,
+    style: getAlarmZoneStyle(getPalette()),
+    zIndex: 75,
   });
 }
 

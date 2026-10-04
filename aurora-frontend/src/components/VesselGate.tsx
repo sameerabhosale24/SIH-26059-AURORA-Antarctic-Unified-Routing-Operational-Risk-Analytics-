@@ -27,15 +27,15 @@ function Blocked({
 }): JSX.Element {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
-      <p className="text-sm font-semibold tracking-[0.1em] text-aurora-text">{title}</p>
-      <p className="max-w-md text-[11px] leading-relaxed text-aurora-muted">{message}</p>
+      <p className="text-sm font-semibold tracking-[0.1em] text-ocean-100">{title}</p>
+      <p className="max-w-md text-[11px] leading-relaxed text-ocean-300">{message}</p>
 
       <div className="flex items-center gap-2">
         {onRetry ? (
           <button
             type="button"
             onClick={onRetry}
-            className="rounded-sm border border-aurora-border px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-aurora-muted transition-colors hover:text-aurora-text"
+            className="rounded-sm border border-ocean-600 px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] text-ocean-300 transition-colors hover:bg-ocean-800 hover:text-ocean-100"
           >
             Retry
           </button>
@@ -43,7 +43,7 @@ function Blocked({
 
         <Link
           to="/ships"
-          className="rounded-sm bg-aurora-accent px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-aurora-bg transition-opacity hover:opacity-90"
+          className="rounded-sm bg-ocean-600 hover:bg-ocean-500 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white "
         >
           Back to fleet
         </Link>
@@ -71,7 +71,7 @@ export function VesselGate({ children }: { children: ReactNode }): JSX.Element {
 
   if (loading && !ready) {
     return (
-      <div className="flex h-full items-center justify-center text-xs text-aurora-muted">
+      <div className="flex h-full items-center justify-center text-xs text-ocean-300">
         Loading vessel…
       </div>
     );

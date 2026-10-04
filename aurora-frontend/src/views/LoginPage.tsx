@@ -54,23 +54,23 @@ export function LoginPage(): JSX.Element {
   const busy = isSubmitting || status === 'pending';
 
   return (
-    <div className="flex min-h-full items-center justify-center bg-aurora-bg px-4 py-10">
+    <div className="flex min-h-full items-center justify-center bg-ocean-950/80 px-4 py-10">
       <form
         onSubmit={(event) => {
           void onSubmit(event);
         }}
-        className="w-full max-w-sm rounded border border-aurora-border bg-aurora-panel p-6"
+        className="w-full max-w-sm rounded border border-ocean-700 bg-ocean-900 p-6"
         noValidate
       >
         <div className="mb-6 text-center">
-          <div className="text-lg font-semibold tracking-[0.3em] text-aurora-accent">AURORA</div>
-          <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-aurora-muted">
+          <div className="text-lg font-semibold tracking-[0.3em] text-ocean-400">AURORA</div>
+          <p className="mt-1 text-[10px] uppercase tracking-[0.18em] text-ocean-300">
             Vessel decision support
           </p>
         </div>
 
         <label className="mb-3 block" title="The address your operator account was created with">
-          <span className="mb-1 block text-[10px] uppercase tracking-[0.14em] text-aurora-muted">
+          <span className="mb-1 block text-[10px] uppercase tracking-[0.14em] text-ocean-300">
             Email
           </span>
           <input
@@ -78,7 +78,7 @@ export function LoginPage(): JSX.Element {
             autoComplete="username"
             autoFocus
             placeholder="operator@aurora.demo"
-            className="w-full rounded-sm border border-aurora-border bg-aurora-bg px-2.5 py-2 text-sm text-aurora-text outline-none transition-colors focus:border-aurora-accent"
+            className="w-full rounded-sm border border-ocean-800 bg-ocean-950 px-2.5 py-2 text-sm text-ocean-100 outline-none transition-colors focus:border-ocean-400"
             aria-invalid={errors.email ? true : undefined}
             {...register('email')}
           />
@@ -88,14 +88,14 @@ export function LoginPage(): JSX.Element {
         </label>
 
         <label className="mb-4 block" title="Your account password. It is never shown back to you.">
-          <span className="mb-1 block text-[10px] uppercase tracking-[0.14em] text-aurora-muted">
+          <span className="mb-1 block text-[10px] uppercase tracking-[0.14em] text-ocean-300">
             Password
           </span>
           <input
             type="password"
             autoComplete="current-password"
             placeholder="••••••••"
-            className="w-full rounded-sm border border-aurora-border bg-aurora-bg px-2.5 py-2 text-sm text-aurora-text outline-none transition-colors focus:border-aurora-accent"
+            className="w-full rounded-sm border border-ocean-800 bg-ocean-950 px-2.5 py-2 text-sm text-ocean-100 outline-none transition-colors focus:border-ocean-400"
             aria-invalid={errors.password ? true : undefined}
             {...register('password')}
           />
@@ -118,19 +118,19 @@ export function LoginPage(): JSX.Element {
         <button
           type="submit"
           disabled={busy}
-          className="w-full rounded-sm bg-aurora-accent px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-aurora-bg transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-sm bg-ocean-600 hover:bg-ocean-500 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
           {busy ? 'Signing in…' : 'Sign in'}
         </button>
 
-        <p className="mt-4 text-center text-[10px] leading-relaxed text-aurora-muted">
+        <p className="mt-4 text-center text-[10px] leading-relaxed text-ocean-300">
           Don&apos;t have an account?{' '}
-          <Link to="/register" className="text-aurora-accent underline-offset-2 hover:underline">
+          <Link to="/register" className="text-ocean-400 underline-offset-2 hover:underline">
             Create one
           </Link>
         </p>
 
-        <p className="mt-3 text-center text-[10px] leading-relaxed text-aurora-muted">
+        <p className="mt-3 text-center text-[10px] leading-relaxed text-ocean-300">
           Sessions persist across reloads. Signing out only happens when you choose it or the
           token is rejected.
         </p>

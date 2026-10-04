@@ -15,6 +15,7 @@
  */
 import ImageStatic from 'ol/source/ImageStatic';
 
+import { API_BASE } from '@/config/env';
 import { LCC_CODE, WGS84_CODE, reprojectExtent, type BoxExtent } from '@/config/projection';
 import { getMap } from '@/map/mapSetup';
 import { useSicStore, type SicStore } from '@/stores/sicStore';
@@ -23,6 +24,20 @@ import type { SicFrameMeta } from '@/types/sic';
 /** Layer properties that let `update` detect a frame or projection change. */
 export const SIC_FRAME_PROP = 'aurora-frame';
 export const SIC_PROJ_PROP = 'aurora-proj';
+
+/**
+ * A frame URL from the manifest, made absolute.
+ *
+ * The manifest publishes API-relative paths (`/api/sic/frame/…`), which is
+ * right for a deployment where the console and the API share an origin but
+ * wrong in development, where the page lives on Vite's origin and `/api`
+ * there falls through to the SPA shell — the browser then hands OpenLayers
+ * HTML to decode and the raster dies with `EncodingError`. Every frame URL
+ * therefore goes through `API_BASE`, exactly like the REST client.
+ */
+export function frameHref(url: string): string {
+  return /^[a-z][a-z0-9+.-]*:/i.test(url) ? url : `${API_BASE}${url}`;
+}
 
 /**
  * The frame matching the operator's horizon, or `null`.
@@ -65,7 +80,7 @@ export function imageExtentFor(frame: SicFrameMeta, projectionCode: string): Box
 
 function buildSource(url: string, frame: SicFrameMeta, projectionCode: string): ImageStatic {
   return new ImageStatic({
-    url,
+    url: frameHref(url),
     projection: projectionCode,
     imageExtent: imageExtentFor(frame, projectionCode),
     interpolate: false,

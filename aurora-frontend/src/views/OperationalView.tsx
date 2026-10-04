@@ -45,8 +45,8 @@ export function OperationalView(): JSX.Element {
               aria-pressed={freshnessOpen}
               className={`rounded-sm border px-2 py-1 text-[10px] uppercase tracking-[0.12em] transition-colors ${
                 freshnessOpen
-                  ? 'border-aurora-accent/50 bg-aurora-accent/15 text-aurora-accent'
-                  : 'border-aurora-border bg-aurora-panel/90 text-aurora-muted hover:text-aurora-text'
+                  ? 'border-ocean-400/50 bg-ocean-400/15 text-ocean-400'
+                  : 'border-ocean-800 bg-ocean-900/90 text-ocean-300 hover:text-ocean-100'
               }`}
             >
               Freshness

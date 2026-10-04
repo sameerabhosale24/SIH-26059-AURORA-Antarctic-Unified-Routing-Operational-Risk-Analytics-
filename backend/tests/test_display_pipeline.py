@@ -1,4 +1,4 @@
-"""Tests for the display pipeline — nine PNG frames per forecast.
+"""Tests for the display pipeline — three PNG frames per forecast.
 
 The property with a navigational consequence is transparency: NaN must come
 out of the PNG as alpha 0, because a white box where the coastline is would
@@ -17,7 +17,7 @@ from app.services import display_pipeline as dp
 from app.utils.constants import HORIZONS, ROI_SHAPE
 
 TARGET = date(2026, 3, 15)
-TOTAL_FRAMES = 3 * 3  # horizons x modes
+TOTAL_FRAMES = 3  # horizons, one presentation each
 
 
 class FakeOutput:
@@ -49,13 +49,13 @@ def read_png(path):
 # Filenames and URLs
 # ---------------------------------------------------------------------------
 def test_frame_filename_is_1_based_and_lower():
-    assert dp.frame_filename(1, "day", "median") == "1_day_median.png"
-    assert dp.frame_filename(3, "night", "diff") == "3_night_diff.png"
+    assert dp.frame_filename(1, "median") == "1_median.png"
+    assert dp.frame_filename(3, "diff") == "3_diff.png"
 
 
 def test_frame_url_points_at_the_api_route():
-    url = dp.frame_url(TARGET, 2, "dusk", "uncertainty")
-    assert url == "/api/sic/frame/2026-03-15/2_dusk_uncertainty.png"
+    url = dp.frame_url(TARGET, 2, "uncertainty")
+    assert url == "/api/sic/frame/2026-03-15/2_uncertainty.png"
 
 
 def test_forecast_date_window_holds_three_days():
@@ -67,7 +67,7 @@ def test_forecast_date_window_holds_three_days():
 # ---------------------------------------------------------------------------
 # Rendering without observations
 # ---------------------------------------------------------------------------
-def test_renders_nine_frames_without_actual(output, storage_root):
+def test_renders_three_frames_without_actual(output, storage_root):
     manifest = dp.render_frames(output, TARGET, version=1, staleness={"sic_max_age_days": 0})
 
     assert len(manifest["frames"]) == TOTAL_FRAMES
@@ -81,13 +81,31 @@ def test_renders_nine_frames_without_actual(output, storage_root):
 
     for entry in manifest["frames"]:
         assert (dp.frames_dir(TARGET) / dp.frame_filename(
-            entry["horizon"], entry["mode"], "median")).exists()
+            entry["horizon"], "median")).exists()
         assert (dp.frames_dir(TARGET) / dp.frame_filename(
-            entry["horizon"], entry["mode"], "uncertainty")).exists()
+            entry["horizon"], "uncertainty")).exists()
 
     assert not (dp.arrays_dir(TARGET) / "actual.npy").exists()
     assert (dp.arrays_dir(TARGET) / "median.npy").exists()
     assert (dp.arrays_dir(TARGET) / "uncertainty.npy").exists()
+
+
+def test_one_entry_per_horizon_and_no_display_mode_variants(output, storage_root):
+    """The manifest is three entries, not nine, and nothing is dusk/night."""
+    manifest = dp.render_frames(output, TARGET, version=1)
+
+    assert len(manifest["frames"]) == HORIZONS
+    assert {entry["horizon"] for entry in manifest["frames"]} == {1, 2, 3}
+    assert {entry["mode"] for entry in manifest["frames"]} == {"day"}
+
+    names = sorted(path.name for path in dp.frames_dir(TARGET).glob("*.png"))
+    assert names == [
+        "1_median.png", "1_uncertainty.png",
+        "2_median.png", "2_uncertainty.png",
+        "3_median.png", "3_uncertainty.png",
+    ]
+    assert not list(dp.frames_dir(TARGET).glob("*_dusk_*"))
+    assert not list(dp.frames_dir(TARGET).glob("*_night_*"))
 
 
 def test_renders_twelve_fields_per_horizon_set_with_actual(output, storage_root, roi_shape):
@@ -106,6 +124,27 @@ def test_renders_twelve_fields_per_horizon_set_with_actual(output, storage_root,
     assert np.allclose(stored, 0.4)
     # A single 2-D observation is broadcast, never mixed with fabricated values.
     assert np.array_equal(stored[0], stored[2])
+
+
+def test_valid_mask_nan_s_out_every_field(output, storage_root, roi_shape, forecaster_artifacts):
+    """Cells the forecaster marks invalid must be transparent, not painted.
+
+    The mask is applied before reprojection, so it reaches median,
+    uncertainty and actual alike — a half-width over a contaminated cell is
+    as meaningless as a median over one.
+    """
+    valid = np.ones(roi_shape, dtype=bool)
+    valid[10:20, 30:50] = False
+    np.save(forecaster_artifacts / "valid_mask.npy", valid)
+    invalid = ~valid
+
+    actual = np.full(roi_shape, 0.4, np.float32)
+    dp.render_frames(output, TARGET, version=1, actual=actual)
+
+    for name in ("median", "uncertainty", "actual"):
+        field = np.load(dp.arrays_dir(TARGET) / f"{name}.npy")
+        assert np.isnan(field[:, invalid]).all(), f"{name}: invalid cells must be NaN"
+        assert np.isfinite(field[:, ~invalid]).all(), f"{name}: valid cells must stay finite"
 
 
 def test_manifest_records_staleness_and_penalty(output, storage_root):
@@ -164,7 +203,7 @@ def test_nan_renders_as_fully_transparent_pixels(roi_shape):
     path = dp.frames_dir(TARGET) / "probe.png"
     # extent is [xmin, ymin, xmax, ymax]; the values only affect the aspect,
     # not which pixels carry alpha, so a unit box is enough here.
-    dp._write_png(path, array, "day", "median", [-1.0, -1.0, 1.0, 1.0])
+    dp._write_png(path, array, "median", [-1.0, -1.0, 1.0, 1.0])
 
     png = read_png(path)
     assert png.shape[:2] == array.shape, "PNG pixel grid must match the array"
@@ -183,13 +222,16 @@ def test_nan_survives_reprojection_and_stays_transparent(output, storage_root):
     half_width = np.full((HORIZONS, *ROI_SHAPE), 0.05, np.float32)
     dp.render_frames(FakeOutput(median, half_width), TARGET, version=1)
 
-    from app.utils.projection import reproject_roi_to_lcc
+    from app.utils.grid import place_sic_in_route_grid_nan
+    from app.utils.projection import reproject_route_to_lcc
 
-    lcc, _ = reproject_roi_to_lcc(median[0])
+    # The frame is warped from the route canvas, so the NaN block has to
+    # survive two hops — placement onto the bigger grid, then projection.
+    lcc, _ = reproject_route_to_lcc(place_sic_in_route_grid_nan(median[0]))
     nan_mask = ~np.isfinite(lcc)
     assert nan_mask.any(), "the NaN block should survive reprojection"
 
-    png = read_png(dp.frames_dir(TARGET) / dp.frame_filename(1, "day", "median"))
+    png = read_png(dp.frames_dir(TARGET) / dp.frame_filename(1, "median"))
     assert png.shape[:2] == lcc.shape
 
     alpha = png[:, :, 3]
@@ -205,6 +247,64 @@ def test_nan_survives_reprojection_and_stays_transparent(output, storage_root):
         assert alpha[core].max() == 0.0
     else:  # pragma: no cover — the block is smaller than 3 px in some grids
         assert alpha[nan_mask].mean() > 0.9
+
+
+def test_frame_extent_is_the_route_grid_not_the_sic_grid(output, storage_root):
+    """The manifest advertises the canvas, so the PNG stops being a rectangle.
+
+    An SIC-grid extent is exactly as large as the data, which is how the layer
+    used to arrive on the map with a hard edge at 50°S. The canvas has to run
+    *past* the data — north of it, south of it, and east of it — so the frame's
+    edge is never the data's edge.
+
+    East/west the canvas is the corridor, not the whole product: it spans
+    5°E–85°E at the same 0.25° as the SIC grid, so the 10°W–5°E slice of the
+    product falls outside it on purpose rather than the canvas being stretched
+    to 361 columns. Only latitude has to contain the SIC region outright.
+    """
+    from app.utils.grid import roi_bounds, route_bounds
+    from app.utils.projection import lcc_bounds, route_lcc_bounds
+
+    manifest = dp.render_frames(output, TARGET, version=1)
+
+    route = list(route_lcc_bounds())
+    for entry in manifest["frames"]:
+        assert entry["extent_lcc"] == route
+
+    sic_extent = list(lcc_bounds())
+    assert route != sic_extent, "the canvas must not be the SIC rectangle"
+
+    r_west, r_south, r_east, r_north = route_bounds()
+    s_west, s_south, s_east, s_north = roi_bounds()
+
+    # Latitude: the whole SIC region, with room above and below it, so the
+    # frame never ends where the data ends (50°S / 75°S).
+    assert r_south < s_south
+    assert r_north > s_north
+    # East: the canvas reaches past the data's eastern edge too.
+    assert r_east > s_east
+    # West: corridor-aligned, so the westernmost SIC cells are outside the
+    # canvas by design — that is what keeps the canvas at 321 columns.
+    assert r_west > s_west
+    assert r_west < s_east
+
+
+def test_frame_has_a_transparent_margin_outside_the_sic_region(output, storage_root):
+    """Ice must fade into the ocean instead of ending on the image's edge."""
+    median = np.full((HORIZONS, *ROI_SHAPE), 0.5, np.float32)
+    half_width = np.full((HORIZONS, *ROI_SHAPE), 0.05, np.float32)
+    dp.render_frames(FakeOutput(median, half_width), TARGET, version=1)
+
+    png = read_png(dp.frames_dir(TARGET) / dp.frame_filename(1, "median"))
+    alpha = png[:, :, 3]
+
+    assert alpha.max() > 0.5, "the SIC region itself must stay visible"
+    assert alpha.min() == 0.0, "the canvas must extend past the data"
+    # The four corners are far outside the SIC grid in every direction.
+    assert alpha[0, 0] == 0.0
+    assert alpha[0, -1] == 0.0
+    assert alpha[-1, 0] == 0.0
+    assert alpha[-1, -1] == 0.0
 
 
 # ---------------------------------------------------------------------------

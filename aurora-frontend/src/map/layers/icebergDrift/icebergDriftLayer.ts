@@ -24,10 +24,10 @@ function build(state: IcebergStore): DriftLayer | null {
 
   return new VectorLayer<GeoFeature>({
     source: createDriftSource(features),
-    style: getIcebergDriftStyle(getPalette('day')),
+    style: getIcebergDriftStyle(getPalette()),
     // Below the iceberg markers: a cone must not obscure the position it
     // belongs to.
-    zIndex: 75,
+    zIndex: 40,
   });
 }
 

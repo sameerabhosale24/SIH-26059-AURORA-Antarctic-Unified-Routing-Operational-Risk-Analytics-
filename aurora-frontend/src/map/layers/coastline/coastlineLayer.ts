@@ -25,8 +25,10 @@ function build(): CoastlineLayer | null {
 
   return new VectorLayer<GeoFeature>({
     source,
-    style: getCoastlineStyle(getPalette('day')),
-    zIndex: 20,
+    style: getCoastlineStyle(getPalette()),
+    // Below the ENC chart — the outline annotates the chart, it does not
+    // replace it.
+    zIndex: 10,
   });
 }
 

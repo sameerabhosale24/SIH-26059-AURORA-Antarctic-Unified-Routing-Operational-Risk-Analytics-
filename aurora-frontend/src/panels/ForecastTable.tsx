@@ -63,7 +63,7 @@ interface IcebergLike {
 
 function IceCell({ row }: { row: Row }): JSX.Element {
   if (row.icebergNm === null || row.icebergId === null) {
-    return <span className="font-mono text-aurora-muted">{EM_DASH}</span>;
+    return <span className="font-mono text-ocean-300">{EM_DASH}</span>;
   }
 
   return (
@@ -103,13 +103,13 @@ export function ForecastTable({ className = '' }: { className?: string }): JSX.E
   return (
     <Panel className={className}
       title="Forecast"
-      action={<span className="text-[10px] text-aurora-muted">{rows.length} waypoints</span>}
+      action={<span className="text-[10px] text-ocean-300">{rows.length} waypoints</span>}
       bodyClassName="p-0"
     >
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-left text-[11px]">
-          <thead className="sticky top-0 bg-aurora-panel">
-            <tr className="border-b border-aurora-border text-[10px] uppercase tracking-wide text-aurora-muted">
+          <thead className="sticky top-0 bg-ocean-900">
+            <tr className="border-b border-ocean-800 text-[10px] uppercase tracking-wide text-ocean-300">
               <th className="px-3 py-1.5 font-medium">WPT</th>
               <th className="px-3 py-1.5 font-medium">ETA</th>
               <th className="px-3 py-1.5 text-right font-medium">SIC</th>
@@ -121,20 +121,20 @@ export function ForecastTable({ className = '' }: { className?: string }): JSX.E
 
           <tbody>
             {rows.map((row) => (
-              <tr key={row.waypoint.id} className="border-b border-aurora-border/40">
+              <tr key={row.waypoint.id} className="border-b border-ocean-800/40">
                 <td className="px-3 py-1.5">
-                  <span className="block truncate text-aurora-text">
+                  <span className="block truncate text-ocean-100">
                     {row.waypoint.name ?? `WP${row.waypoint.seq}`}
                   </span>
                 </td>
 
-                <td className="px-3 py-1.5 font-mono text-aurora-text">
+                <td className="px-3 py-1.5 font-mono text-ocean-100">
                   {fmtTime(row.waypoint.eta)}
                 </td>
 
-                <td className="px-3 py-1.5 text-right font-mono text-aurora-muted">{EM_DASH}</td>
-                <td className="px-3 py-1.5 text-right font-mono text-aurora-muted">{EM_DASH}</td>
-                <td className="px-3 py-1.5 text-right font-mono text-aurora-muted">{EM_DASH}</td>
+                <td className="px-3 py-1.5 text-right font-mono text-ocean-300">{EM_DASH}</td>
+                <td className="px-3 py-1.5 text-right font-mono text-ocean-300">{EM_DASH}</td>
+                <td className="px-3 py-1.5 text-right font-mono text-ocean-300">{EM_DASH}</td>
 
                 <td className="px-3 py-1.5 text-right">
                   <IceCell row={row} />
@@ -145,7 +145,7 @@ export function ForecastTable({ className = '' }: { className?: string }): JSX.E
         </table>
       </div>
 
-      <p className="border-t border-aurora-border px-3 py-1.5 text-[10px] leading-snug text-aurora-muted">
+      <p className="border-t border-ocean-800 px-3 py-1.5 text-[10px] leading-snug text-ocean-300">
         SIC, wind and wave have no per-waypoint endpoint — shown as
         {' —'} rather than interpolated. Ice is nearest reported iceberg within
         100 nm, computed from live positions.

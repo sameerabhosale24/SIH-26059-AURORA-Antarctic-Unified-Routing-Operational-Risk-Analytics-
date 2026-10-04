@@ -22,10 +22,10 @@ export interface PanelProps {
 export function Panel({ title, action, children, className = '', bodyClassName = '' }: PanelProps): JSX.Element {
   return (
     <section
-      className={`flex min-h-0 flex-col rounded border border-aurora-border bg-aurora-panel/95 ${className}`}
+      className={`flex min-h-0 flex-col rounded border border-ocean-800 bg-ocean-900/95 ${className}`}
     >
-      <header className="flex shrink-0 items-center justify-between gap-2 border-b border-aurora-border px-3 py-1.5">
-        <h2 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-aurora-muted">
+      <header className="flex shrink-0 items-center justify-between gap-2 border-b border-ocean-800 px-3 py-1.5">
+        <h2 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ocean-300">
           {title}
         </h2>
         {action}

@@ -33,7 +33,7 @@ const SEVERITY_TONE: Record<Alarm['severity'], 'crit' | 'warn' | 'accent'> = {
 const SEVERITY_BAR: Record<Alarm['severity'], string> = {
   critical: 'border-l-aurora-crit',
   warning: 'border-l-aurora-warn',
-  caution: 'border-l-aurora-accent',
+  caution: 'border-l-ocean-400',
 };
 
 /** Human label for the machine `type` union. */
@@ -74,7 +74,7 @@ function AlarmRow({ alarm, pulsing }: { alarm: Alarm; pulsing: boolean }): JSX.E
 
   return (
     <li
-      className={`border-l-2 bg-aurora-bg/40 px-2 py-1.5 transition-colors ${SEVERITY_BAR[alarm.severity]} ${
+      className={`border-l-2 bg-ocean-950/40 px-2 py-1.5 transition-colors ${SEVERITY_BAR[alarm.severity]} ${
         pulsing ? 'animate-pulse' : ''
       }`}
     >
@@ -82,15 +82,15 @@ function AlarmRow({ alarm, pulsing }: { alarm: Alarm; pulsing: boolean }): JSX.E
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge tone={SEVERITY_TONE[alarm.severity]}>{alarm.severity}</Badge>
-            <span className="truncate text-[11px] uppercase tracking-wide text-aurora-muted">
+            <span className="truncate text-[11px] uppercase tracking-wide text-ocean-300">
               {TYPE_LABEL[alarm.type] ?? alarm.type}
             </span>
-            <span className="font-mono text-[10px] text-aurora-muted">{fmtTime(alarm.ts)}</span>
+            <span className="font-mono text-[10px] text-ocean-300">{fmtTime(alarm.ts)}</span>
           </div>
 
-          <p className="mt-1 text-xs leading-snug text-aurora-text">{alarm.message}</p>
+          <p className="mt-1 text-xs leading-snug text-ocean-100">{alarm.message}</p>
 
-          <p className="mt-0.5 font-mono text-[10px] text-aurora-muted">
+          <p className="mt-0.5 font-mono text-[10px] text-ocean-300">
             {hasPosition ? fmtPosition(alarm.lat, alarm.lon) : EM_DASH}
           </p>
         </div>
@@ -101,8 +101,8 @@ function AlarmRow({ alarm, pulsing }: { alarm: Alarm; pulsing: boolean }): JSX.E
           disabled={acked || pending}
           className={`shrink-0 rounded-sm border px-2 py-1 text-[10px] uppercase tracking-[0.12em] transition-colors ${
             acked
-              ? 'cursor-default border-aurora-border text-aurora-muted/60'
-              : 'border-aurora-border text-aurora-text hover:border-aurora-accent hover:text-aurora-accent'
+              ? 'cursor-default border-ocean-800 text-ocean-300/60'
+              : 'border-ocean-800 text-ocean-100 hover:border-ocean-400 hover:text-ocean-400'
           }`}
         >
           {acked ? 'Acked' : 'Ack'}

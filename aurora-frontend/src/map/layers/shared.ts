@@ -23,6 +23,8 @@ import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
 import Polygon from 'ol/geom/Polygon';
 import type Geometry from 'ol/geom/Geometry';
+import type { Extent } from 'ol/extent';
+import type Projection from 'ol/proj/Projection';
 import VectorSource from 'ol/source/Vector';
 
 /** The feature type every AURORA vector layer stores. */
@@ -49,9 +51,31 @@ export function ageSeconds(iso: string | null | undefined, now = Date.now()): nu
   return Math.max(0, (now - ms) / 1000);
 }
 
+/**
+ * A vector source that never drops features from a viewport query.
+ *
+ * `ol/renderer/canvas/VectorLayer` culls with `getFeaturesInExtent(
+ * toUserExtent(viewExtent))`, and `toUserExtent` → `transformExtent` projects
+ * only the *four corners* of the view rectangle. Under AURORA's wide LCC view
+ * that corner-only box is rotated against the parallels: it reaches barely
+ * ~63°S while the viewport itself shows water down to ~78°S, so every
+ * Antarctic feature — stations, coastline, the southern graticule — is culled
+ * before it is ever drawn.
+ *
+ * The canvas clips to the viewport anyway, so reporting the full feature set
+ * costs only overdraw, and hit detection gets a complete candidate list too.
+ * Every AURORA source is small and static within a frame, so there is no
+ * spatial index worth keeping for this trade-off.
+ */
+class UnculledVectorSource<T extends Feature<Geometry>> extends VectorSource<T> {
+  getFeaturesInExtent(_extent: Extent, _projection?: Projection): T[] {
+    return this.getFeatures();
+  }
+}
+
 /** A fresh, empty vector source holding WGS84 geometries. */
 export function createGeoSource(): GeoVectorSource {
-  return new VectorSource<GeoFeature>();
+  return new UnculledVectorSource<GeoFeature>();
 }
 
 /** A point feature carrying arbitrary attributes, in WGS84 degrees. */

@@ -13,8 +13,8 @@ const TONE_CLASS: Record<BadgeTone, string> = {
   ok: 'border-aurora-ok/40 bg-aurora-ok/10 text-aurora-ok',
   warn: 'border-aurora-warn/40 bg-aurora-warn/10 text-aurora-warn',
   crit: 'border-aurora-crit/50 bg-aurora-crit/15 text-aurora-crit',
-  muted: 'border-aurora-border bg-aurora-bg/60 text-aurora-muted',
-  accent: 'border-aurora-accent/40 bg-aurora-accent/10 text-aurora-accent',
+  muted: 'border-ocean-800 bg-ocean-950/60 text-ocean-300',
+  accent: 'border-ocean-400/40 bg-ocean-400/10 text-ocean-400',
 };
 
 export interface BadgeProps {

@@ -15,8 +15,8 @@ export interface EmptyStateProps {
 export function EmptyState({ message, hint }: EmptyStateProps): JSX.Element {
   return (
     <div className="flex h-full min-h-[3rem] flex-col items-center justify-center gap-1 px-2 py-4 text-center">
-      <p className="text-xs tracking-wide text-aurora-muted">{message}</p>
-      {hint ? <p className="text-[11px] leading-relaxed text-aurora-muted/70">{hint}</p> : null}
+      <p className="text-xs tracking-wide text-ocean-300">{message}</p>
+      {hint ? <p className="text-[11px] leading-relaxed text-ocean-300/70">{hint}</p> : null}
     </div>
   );
 }
